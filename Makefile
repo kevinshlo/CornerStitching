@@ -5,7 +5,7 @@ INC = $(wildcard $(SRC_DIR)/*.hpp)
 
 CXX := g++
 CXX_FLAGS := -std=c++17 -Wall -fPIC
-GTEST_FLAGS = -lgtest
+GTEST_FLAGS = -DGTEST -lgtest
 PY_FLAGS := \
 	-DPY -O3 -shared \
 	`python3-config --includes --ldflags` \
