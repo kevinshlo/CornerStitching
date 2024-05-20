@@ -17,11 +17,10 @@ PY_FLAGS := \
 all: py
 
 py: $(SRC) $(INC)
-	@pip install pybind11
-	$(CXX) $(CXX_FLAGS) $(PY_FLAGS) $(SRC) -o $(NAME).so
+	$(CXX) $(SRC) -o $(NAME).so $(CXX_FLAGS) $(PY_FLAGS)
 
 gtest: $(SRC) $(INC) $(TEST)
-	$(CXX) $(CXX_FLAGS) $(GTEST_FLAGS) $(SRC) $(TEST) -o $(NAME)
+	$(CXX) $(SRC) $(TEST) -o $(NAME) $(CXX_FLAGS) $(GTEST_FLAGS)
 	./$(NAME)
 
 .PHONY: clean
