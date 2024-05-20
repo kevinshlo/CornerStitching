@@ -8,23 +8,38 @@ Stitch::Stitch(const Pt& coord, const Pt& size) : coord_(coord), size_(size) {
 }
 
 Id Stitch::PointFinding(const Pt& p) {
-  auto id = FirstTile();
+  Id id = LastInserted();
   while (id != kNullId && !tiles_[id].value().Contain(p)) {
-    Tile& t = tiles_[id].value();
     // move up/down using rt/lb, until the tile's vertical range contains y
-    for (auto cmp_y = t.CmpY(p); cmp_y != Tile::EQ;
-         id = (cmp_y == Tile::LT) ? t.rt : t.lb);
+    while (id != kNullId) {
+      assert(tiles_[id].has_value() && "id must point to a real tile");
+      Tile& t = tiles_[id].value();
+      auto cmp_y = t.CmpY(p);
+      if (cmp_y == Tile::EQ)
+        break;
+      else
+        id = (cmp_y == Tile::LT) ? t.lb : t.rt;
+    }
     // move left/right using tr/bl, until the tile's horizontal range contains x
-    for (auto cmp_x = t.CmpX(p); cmp_x != Tile::EQ;
-         id = (cmp_x == Tile::LT) ? t.tr : t.bl);
+    while (id != kNullId) {
+      assert(tiles_[id].has_value() && "id must point to a real tile");
+      Tile& t = tiles_[id].value();
+      auto cmp_x = t.CmpX(p);
+      if (cmp_x == Tile::EQ)
+        break;
+      else
+        id = (cmp_x == Tile::LT) ? t.bl : t.tr;
+    }
     // repeat since misalignment might occur
   }
   return id;
 }
 
-Id Stitch::FirstTile() const {
-  if (Size())
-    for (size_t i = 0; i < tiles_.size(); i++)
+Id Stitch::LastInserted() const {
+  if (last_inserted_ != kNullId && tiles_[last_inserted_].has_value())
+    return last_inserted_;
+  else if (Size())
+    for (int i = tiles_.size() - 1; i >= 0; i--)
       if (tiles_[i].has_value()) return i;
   return kNullId;
 }

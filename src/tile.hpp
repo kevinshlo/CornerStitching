@@ -30,18 +30,13 @@ struct Tile {
   Id lb{kNullId};  // left-most bottom
   Id tr{kNullId};  // top-most right
   Id rt{kNullId};  // right-most top
+  bool is_space{true};
 
   Tile() = default;
   Tile(const Tile&) = default;
-  Tile(const Pt& coord, const Pt& size) : coord(coord), size(size) {
-    assert(coord.QuadrantI() && "coord must lies in Quadrant I");
-    assert(size.IsSize(coord) && "illegal size");
-  }
-  Tile(const Pt& coord, const Pt& size, Id bl, Id lb, Id tr, Id rt)
-      : coord(coord), size(size), bl(bl), lb(lb), tr(tr), rt(rt) {
-    assert(coord.QuadrantI() && "coord must lies in Quadrant I");
-    assert(size.IsSize(coord) && "illegal size");
-  }
+  Tile(const Pt& coord, const Pt& size, bool is_space = true);
+  Tile(const Pt& coord, const Pt& size, Id bl, Id lb, Id tr, Id rt,
+       bool is_space = true);
 
   enum Cmp {
     LT = -1,  // lefter/lower then the tile for a dimension

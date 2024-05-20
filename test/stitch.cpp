@@ -2,8 +2,10 @@
 
 #include <gtest/gtest.h>
 
-std::vector<std::optional<Tile>> Tiles() {
-  return {
+/* An example stitch from `examples/stitch1.drawio.png` */
+Stitch Example1() {
+  Stitch s(Pt(0, 0), Pt(30, 24));
+  s.tiles_ = {
       Tile(Pt(0, 0), Pt(30, 2), kNullId, kNullId, kNullId, 4),
       Tile(Pt(0, 2), Pt(15, 3), kNullId, 0, 2, 7),
       Tile(Pt(15, 2), Pt(5, 5), 1, 0, 8, 9),
@@ -26,10 +28,35 @@ std::vector<std::optional<Tile>> Tiles() {
       Tile(Pt(13, 18), Pt(17, 4), 18, 16, kNullId, 20),
       Tile(Pt(0, 22), Pt(30, 2), kNullId, 17, kNullId, kNullId),
   };
+  s.slots_ = {};
+  s.last_inserted_ = 11;
+  return s;
 }
 
-TEST(Stitch, PointFinding) {
-  Stitch stitch;
-  stitch.SetTiles(Tiles());
-  stitch.SetSlots({});
+TEST(Stitch, PointFinding1) {
+  Stitch s = Example1();
+  // collect id of exist tiles
+  std::vector<Id> ids;
+  for (size_t i = 0; i < s.tiles_.size(); i++)
+    if (s.tiles_[i].has_value()) ids.push_back(i);
+  // begin search from default tile (LastInserted)
+  for (auto id : ids) {
+    Tile &t = s.tiles_[id].value();
+    EXPECT_EQ(id, s.PointFinding(t.coord));  // bottom-left is in itself
+    EXPECT_NE(id, s.PointFinding(t.coord + t.size));  // top-right NOT
+  }
+  // begin search from corners
+  for (auto pt : {
+           s.coord_,                     // bottom-left
+           s.coord_ + Pt(0, s.size_.y),  // bottom-right
+           s.coord_ + Pt(s.size_.x, 0),  // top-left
+           s.coord_ + s.size_            // top-right
+       }) {
+    s.last_inserted_ = s.PointFinding(pt);
+    for (auto id : ids) {
+      Tile &t = s.tiles_[id].value();
+      EXPECT_EQ(id, s.PointFinding(t.coord));  // bottom-left is in itself
+      EXPECT_NE(id, s.PointFinding(t.coord + t.size));  // top-right NOT
+    }
+  }
 }

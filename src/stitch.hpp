@@ -20,20 +20,17 @@ class Stitch {
   Tile& InsertTile(Tile Tile);
   Tile& DeleteTile(Tile Tile);
 
+#ifdef GTEST
+ public:
+#else
  protected:
+#endif
   /* default: cover QuadrantI*/
   Pt coord_{0, 0};             // lower-left corner
   Pt size_{kLenMax, kLenMax};  // (width, height)
   std::vector<std::optional<Tile>> tiles_{Tile(Pt(0, 0), Pt(kLenMax, kLenMax))};
   std::stack<size_t> slots_{};  // index in tiles_ which are already deleted
+  Id last_inserted_{kNullId};   // record last tile for better locality
 
-  Id FirstTile() const;
-
-#ifdef GTEST
- public:
-  void SetTiles(std::vector<std::optional<Tile>> tiles) {
-    tiles_ = std::move(tiles);
-  }
-  void SetSlots(std::stack<size_t> slots) { slots_ = std::move(slots); }
-#endif
+  Id LastInserted() const;
 };
