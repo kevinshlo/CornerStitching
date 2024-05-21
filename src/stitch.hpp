@@ -16,7 +16,15 @@ class Stitch {
 
   // find the tile at `pt`, default start at `last_inserted_`
   Id PointFinding(const Pt& pt, Id start = kNullId) const;
-  void NeighborFinding(const Tile& tile);
+  // find all neighbors contacting the right edge of tile `id`
+  std::vector<Id> RightNeighborFinding(Id id) const;
+  std::vector<Id> LeftNeighborFinding(Id id) const;
+  std::vector<Id> TopNeighborFinding(Id id) const {
+    return RightNeighborFinding(id);
+  }
+  std::vector<Id> BottomNeighborFinding(Id id) const {
+    return RightNeighborFinding(id);
+  }
   void AreaSearch(const Pt& bl, const Pt& tr);
   Tile& InsertTile(Tile Tile);
   Tile& DeleteTile(Tile Tile);

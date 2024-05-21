@@ -3,7 +3,7 @@
 #include <cassert>
 
 Stitch::Stitch(const Pt& coord, const Pt& size) : coord_(coord), size_(size) {
-  assert(coord_.QuadrantI() && "coord must lies in Quadrant I");
+  assert(coord_.InQuadrantI() && "coord must lies in Quadrant I");
   assert(size_.IsSize() && "illegal size");
 }
 
@@ -33,6 +33,39 @@ Id Stitch::PointFinding(const Pt& p, Id start) const {
     // repeat since misalignment might occur
   }
   return id;
+}
+
+// find all neighbors contacting the right edge of tile `id`
+std::vector<Id> Stitch::RightNeighborFinding(Id id) const {
+  assert(Exist(id) && "target tile must exist");
+  const auto& tl = tiles_[id].value();
+  std::vector<Id> neighbors;
+  for (Id i = tl.tr;             // 1. go to tr
+       Exist(i);                 //
+       i = tiles_[i].value().lb  // 2. trace down through lb
+  ) {
+    if (tiles_[i].value().IsRightNeighborTo(tl))
+      neighbors.push_back(i);
+    else
+      break;
+  }
+  return neighbors;
+}
+
+std::vector<Id> Stitch::LeftNeighborFinding(Id id) const {
+  assert(Exist(id) && "target tile must exist");
+  const auto& tl = tiles_[id].value();
+  std::vector<Id> neighbors;
+  for (Id i = tl.bl;             // 1. go to bl
+       Exist(i);                 //
+       i = tiles_[i].value().rt  // 2. trace down through rt
+  ) {
+    if (tiles_[i].value().IsLeftNeighborTo(tl))
+      neighbors.push_back(i);
+    else
+      break;
+  }
+  return neighbors;
 }
 
 Id Stitch::LastInserted() const {

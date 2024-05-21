@@ -18,9 +18,12 @@ struct Pt {
   Pt operator/(Len l) const { return Pt(x / l, y / l); }
   bool operator==(const Pt& p) const { return (x == p.x) && (y == p.y); }
   // lies in first quadrant
-  bool QuadrantI() const { return (x >= 0) && (y >= 0); }
+  bool InQuadrantI() const { return (x >= 0) && (y >= 0); }
   // represents legal width & height relative to `coord` (default:(0, 0))
-  bool IsSize(const Pt& coord = {0, 0}) const;
+  bool IsSize(const Pt& coord = {0, 0}) const {
+    return (0 < x) && (x <= (kLenMax - coord.x)) &&  //
+           (0 < y) && (y <= (kLenMax - coord.y));
+  }
 };
 
 typedef int Id;
@@ -46,9 +49,34 @@ struct Tile {
     EQ = 0,   // contained inside
     GT = 1    // righter/higher
   };
-  Cmp CmpX(Len x) const;
+  /* relative position of `x` along x-axis to this tile */
+  Cmp CmpX(Len x) const {
+    return x < coord.x ? LT : (coord.x + size.x) <= x ? GT : EQ;
+  }
+  /* relative position of `p` along x-axis to this tile */
   Cmp CmpX(const Pt& p) const { return CmpX(p.x); }
-  Cmp CmpY(Len y) const;
+  /* relative position of `y` along y-axis to this tile */
+  Cmp CmpY(Len y) const {
+    return y < coord.y ? LT : (coord.y + size.y) <= y ? GT : EQ;
+  }
+  /* relative position of `y` along y-axis to this tile */
   Cmp CmpY(const Pt& p) const { return CmpY(p.y); }
+  /* `p` lies inside this tile? */
   bool Contain(const Pt& p) const { return CmpX(p.x) == EQ && CmpY(p.y) == EQ; }
+
+  /* `t` and this tile overlaps along x-axis? */
+  bool OverlapX(const Tile& t) const {
+    return (CmpX(t.coord) != GT) && (CmpX(t.coord + t.size) != LT);
+  }
+  /* `t` and this tile overlaps along y-axis? */
+  bool OverlapY(const Tile& t) const {
+    return (CmpY(t.coord) != GT) && (CmpY(t.coord + t.size) != LT);
+  }
+
+  bool IsRightNeighborTo(const Tile& t) const {
+    return (coord.x == (t.coord.x + t.size.x)) && OverlapY(t);
+  }
+  bool IsLeftNeighborTo(const Tile& t) const {
+    return ((coord.x + size.x) == t.coord.x) && OverlapY(t);
+  }
 };
