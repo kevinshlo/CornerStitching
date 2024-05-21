@@ -62,9 +62,26 @@ struct Example {
         {15, {14}}, {16, {}},       {17, {}},    {18, {17}}, {19, {18}},
         {20, {}},
     };
+    NeighborGolden top_neighbors = {
+        {0, {4, 3, 2, 1}},  {1, {7, 6, 5}},    {2, {9}},   {3, {8}},
+        {4, {8}},           {5, {13}},         {6, {13}},  {7, {9}},
+        {8, {9}},           {9, {12, 11, 10}}, {10, {13}}, {11, {16}},
+        {12, {15, 14}},     {13, {16}},        {14, {19}}, {15, {19}},
+        {16, {19, 18, 17}}, {17, {20}},        {18, {20}}, {19, {20}},
+        {20, {}},
+    };
+    NeighborGolden bottom_neighbors = {
+        {0, {}},        {1, {0}},           {2, {0}},
+        {3, {0}},       {4, {0}},           {5, {1}},
+        {6, {1}},       {7, {1}},           {8, {3, 4}},
+        {9, {7, 2, 8}}, {10, {9}},          {11, {9}},
+        {12, {9}},      {13, {5, 6, 10}},   {14, {12}},
+        {15, {12}},     {16, {13, 11}},     {17, {16}},
+        {18, {16}},     {19, {16, 14, 15}}, {20, {17, 18, 19}},
+    };
     return Example(std::move(s), std::move(right_neighbors),
-                   std::move(left_neighbors), NeighborGolden(),
-                   NeighborGolden());
+                   std::move(left_neighbors), std::move(top_neighbors),
+                   std::move(bottom_neighbors));
   }
 };
 
@@ -118,7 +135,7 @@ void TestNeighborFinding(const Example& example, Side side) {
     auto neighbors = side == RIGHT  ? s.RightNeighborFinding(id)
                      : side == LEFT ? s.LeftNeighborFinding(id)
                      : side == TOP  ? s.TopNeighborFinding(id)
-                                    : s.LeftNeighborFinding(id);
+                                    : s.BottomNeighborFinding(id);
     EXPECT_EQ(golden.at(id), neighbors);
   }
 }
@@ -129,4 +146,11 @@ TEST(Stitch, RightNeighborFinding1) {
 
 TEST(Stitch, LeftNeighborFinding1) {
   TestNeighborFinding(Example::Example1(), LEFT);
+}
+
+TEST(Stitch, TopNeighborFinding1) {
+  TestNeighborFinding(Example::Example1(), TOP);
+}
+TEST(Stitch, BottomNeighborFinding1) {
+  TestNeighborFinding(Example::Example1(), BOTTOM);
 }

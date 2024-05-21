@@ -35,7 +35,6 @@ Id Stitch::PointFinding(const Pt& p, Id start) const {
   return id;
 }
 
-// find all neighbors contacting the right edge of tile `id`
 std::vector<Id> Stitch::RightNeighborFinding(Id id) const {
   assert(Exist(id) && "target tile must exist");
   const auto& tl = tiles_[id].value();
@@ -58,9 +57,41 @@ std::vector<Id> Stitch::LeftNeighborFinding(Id id) const {
   std::vector<Id> neighbors;
   for (Id i = tl.bl;             // 1. go to bl
        Exist(i);                 //
-       i = tiles_[i].value().rt  // 2. trace down through rt
+       i = tiles_[i].value().rt  // 2. trace up through rt
   ) {
     if (tiles_[i].value().IsLeftNeighborTo(tl))
+      neighbors.push_back(i);
+    else
+      break;
+  }
+  return neighbors;
+}
+
+std::vector<Id> Stitch::TopNeighborFinding(Id id) const {
+  assert(Exist(id) && "target tile must exist");
+  const auto& tl = tiles_[id].value();
+  std::vector<Id> neighbors;
+  for (Id i = tl.rt;             // 1. go to rt
+       Exist(i);                 //
+       i = tiles_[i].value().bl  // 2. trace left through bl
+  ) {
+    if (tiles_[i].value().IsTopNeighborTo(tl))
+      neighbors.push_back(i);
+    else
+      break;
+  }
+  return neighbors;
+}
+
+std::vector<Id> Stitch::BottomNeighborFinding(Id id) const {
+  assert(Exist(id) && "target tile must exist");
+  const auto& tl = tiles_[id].value();
+  std::vector<Id> neighbors;
+  for (Id i = tl.lb;             // 1. go to lb
+       Exist(i);                 //
+       i = tiles_[i].value().tr  // 2. trace right through tr
+  ) {
+    if (tiles_[i].value().IsBottomNeighborTo(tl))
       neighbors.push_back(i);
     else
       break;

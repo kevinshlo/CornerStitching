@@ -79,4 +79,10 @@ struct Tile {
   bool IsLeftNeighborTo(const Tile& t) const {
     return ((coord.x + size.x) == t.coord.x) && OverlapY(t);
   }
+  bool IsTopNeighborTo(const Tile& t) const {
+    return (coord.y == (t.coord.y + t.size.y)) && OverlapX(t);
+  }
+  bool IsBottomNeighborTo(const Tile& t) const {
+    return ((coord.y + size.y) == t.coord.y) && OverlapX(t);
+  }
 };
