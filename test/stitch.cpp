@@ -47,16 +47,17 @@ TEST(Stitch, PointFinding1) {
   }
   // begin search from corners
   for (auto pt : {
-           s.coord_,                     // bottom-left
-           s.coord_ + Pt(0, s.size_.y),  // bottom-right
-           s.coord_ + Pt(s.size_.x, 0),  // top-left
-           s.coord_ + s.size_            // top-right
+           s.coord_,                            // bottom-left
+           s.coord_ + Pt(s.size_.x - 0.1, 0),   // bottom-right
+           s.coord_ + Pt(0, s.size_.y - 0.1),   // top-left
+           s.coord_ + s.size_ + Pt(-0.1, -0.1)  // top-right
        }) {
-    s.last_inserted_ = s.PointFinding(pt);
+    Id start = s.PointFinding(pt);
+    EXPECT_NE(kNullId, start);
     for (auto id : ids) {
       Tile &t = s.tiles_[id].value();
-      EXPECT_EQ(id, s.PointFinding(t.coord));  // bottom-left is in itself
-      EXPECT_NE(id, s.PointFinding(t.coord + t.size));  // top-right NOT
+      EXPECT_EQ(id, s.PointFinding(t.coord, start));  // bottom-left is inside
+      EXPECT_NE(id, s.PointFinding(t.coord + t.size, start));  // top-right NOT
     }
   }
 }

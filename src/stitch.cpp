@@ -7,13 +7,13 @@ Stitch::Stitch(const Pt& coord, const Pt& size) : coord_(coord), size_(size) {
   assert(size_.IsSize() && "illegal size");
 }
 
-Id Stitch::PointFinding(const Pt& p) {
-  Id id = LastInserted();
+Id Stitch::PointFinding(const Pt& p, Id start) const {
+  Id id = Exist(start) ? start : LastInserted();
   while (id != kNullId && !tiles_[id].value().Contain(p)) {
     // move up/down using rt/lb, until the tile's vertical range contains y
     while (id != kNullId) {
       assert(tiles_[id].has_value() && "id must point to a real tile");
-      Tile& t = tiles_[id].value();
+      const auto& t = tiles_[id].value();
       auto cmp_y = t.CmpY(p);
       if (cmp_y == Tile::EQ)
         break;
@@ -23,7 +23,7 @@ Id Stitch::PointFinding(const Pt& p) {
     // move left/right using tr/bl, until the tile's horizontal range contains x
     while (id != kNullId) {
       assert(tiles_[id].has_value() && "id must point to a real tile");
-      Tile& t = tiles_[id].value();
+      const auto& t = tiles_[id].value();
       auto cmp_x = t.CmpX(p);
       if (cmp_x == Tile::EQ)
         break;
@@ -36,7 +36,7 @@ Id Stitch::PointFinding(const Pt& p) {
 }
 
 Id Stitch::LastInserted() const {
-  if (last_inserted_ != kNullId && tiles_[last_inserted_].has_value())
+  if (Exist(last_inserted_))
     return last_inserted_;
   else if (Size())
     for (int i = tiles_.size() - 1; i >= 0; i--)

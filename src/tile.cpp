@@ -24,13 +24,13 @@ bool Pt::IsSize(const Pt& coord) const {
          && (0 < y) && (y <= (kLenMax - coord.y));
 }
 
-Tile::Cmp Tile::CmpX(Len x) {
+Tile::Cmp Tile::CmpX(Len x) const {
   if (x < coord.x) return LT;
   if ((coord.x + size.x) <= x) return GT;
   return EQ;
 }
 
-Tile::Cmp Tile::CmpY(Len y) {
+Tile::Cmp Tile::CmpY(Len y) const {
   if (y < coord.y) return LT;
   if ((coord.y + size.y) <= y) return GT;
   return EQ;

@@ -43,9 +43,9 @@ struct Tile {
     EQ = 0,   // contained inside
     GT = 1    // righter/higher
   };
-  Cmp CmpX(Len x);
-  Cmp CmpX(const Pt& p) { return CmpX(p.x); }
-  Cmp CmpY(Len y);
-  Cmp CmpY(const Pt& p) { return CmpY(p.y); }
-  bool Contain(const Pt& p) { return CmpX(p.x) == EQ && CmpY(p.y) == EQ; }
+  Cmp CmpX(Len x) const;
+  Cmp CmpX(const Pt& p) const { return CmpX(p.x); }
+  Cmp CmpY(Len y) const;
+  Cmp CmpY(const Pt& p) const { return CmpY(p.y); }
+  bool Contain(const Pt& p) const { return CmpX(p.x) == EQ && CmpY(p.y) == EQ; }
 };

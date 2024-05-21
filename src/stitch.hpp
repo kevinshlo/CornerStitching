@@ -14,7 +14,8 @@ class Stitch {
 
   size_t Size() const { return tiles_.size() - slots_.size(); }
 
-  Id PointFinding(const Pt&);  // find the tile at (x,y)
+  // find the tile at `pt`, default start at `last_inserted_`
+  Id PointFinding(const Pt& pt, Id start = kNullId) const;
   void NeighborFinding(const Tile& tile);
   void AreaSearch(const Pt& bl, const Pt& tr);
   Tile& InsertTile(Tile Tile);
@@ -32,5 +33,6 @@ class Stitch {
   std::stack<size_t> slots_{};  // index in tiles_ which are already deleted
   Id last_inserted_{kNullId};   // record last tile for better locality
 
+  bool Exist(Id id) const { return id != kNullId && tiles_[id].has_value(); }
   Id LastInserted() const;
 };
