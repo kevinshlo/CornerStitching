@@ -13,6 +13,9 @@ struct Pt {
   Pt(Len x, Len y) : x(x), y(y) {}
   Pt operator+(const Pt& p) const { return Pt(x + p.x, y + p.y); }
   Pt operator-(const Pt& p) const { return Pt(x - p.x, y - p.y); }
+  Pt operator-() const { return Pt(-x, -y); }
+  Pt operator*(Len l) const { return Pt(x * l, y * l); }
+  Pt operator/(Len l) const { return Pt(x / l, y / l); }
   bool operator==(const Pt& p) const { return (x == p.x) && (y == p.y); }
   // lies in first quadrant
   bool QuadrantI() const { return (x >= 0) && (y >= 0); }

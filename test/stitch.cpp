@@ -35,29 +35,32 @@ Stitch Example1() {
 
 TEST(Stitch, PointFinding1) {
   Stitch s = Example1();
-  // collect id of exist tiles
+  // collect id of existing tiles
   std::vector<Id> ids;
   for (size_t i = 0; i < s.tiles_.size(); i++)
     if (s.tiles_[i].has_value()) ids.push_back(i);
-  // begin search from default tile (LastInserted)
-  for (auto id : ids) {
-    Tile &t = s.tiles_[id].value();
-    EXPECT_EQ(id, s.PointFinding(t.coord));  // bottom-left is in itself
-    EXPECT_NE(id, s.PointFinding(t.coord + t.size));  // top-right NOT
-  }
-  // begin search from corners
-  for (auto pt : {
-           s.coord_,                            // bottom-left
-           s.coord_ + Pt(s.size_.x - 0.1, 0),   // bottom-right
-           s.coord_ + Pt(0, s.size_.y - 0.1),   // top-left
-           s.coord_ + s.size_ + Pt(-0.1, -0.1)  // top-right
-       }) {
-    Id start = s.PointFinding(pt);
-    EXPECT_NE(kNullId, start);
+  // starting tiles
+  std::vector<Id> starts = {
+      kNullId,                                             // default
+      s.PointFinding(s.coord_),                            // bottom-left
+      s.PointFinding(s.coord_ + Pt(s.size_.x - 0.1, 0)),   // bottom-right
+      s.PointFinding(s.coord_ + Pt(0, s.size_.y - 0.1)),   // top-left
+      s.PointFinding(s.coord_ + s.size_ + Pt(-0.1, -0.1))  // top-right
+  };
+  for (auto it = starts.begin() + 1; it != starts.end(); it++)
+    EXPECT_NE(kNullId, *it);
+  // for each starting tile, test each tile's all corners
+  for (auto start : starts) {
     for (auto id : ids) {
       Tile &t = s.tiles_[id].value();
-      EXPECT_EQ(id, s.PointFinding(t.coord, start));  // bottom-left is inside
-      EXPECT_NE(id, s.PointFinding(t.coord + t.size, start));  // top-right NOT
+      EXPECT_EQ(id, s.PointFinding(t.coord, start));
+      EXPECT_NE(id, s.PointFinding(t.coord + Pt(t.size.x, 0), start));
+      EXPECT_EQ(id, s.PointFinding(t.coord + Pt(t.size.x - 0.1, 0), start));
+      EXPECT_NE(id, s.PointFinding(t.coord + Pt(0, t.size.y), start));
+      EXPECT_EQ(id, s.PointFinding(t.coord + Pt(0, t.size.y - 0.1), start));
+      EXPECT_NE(id, s.PointFinding(t.coord + t.size, start));
+      EXPECT_EQ(id, s.PointFinding(t.coord + t.size + Pt(-0.1, -0.1), start));
+      EXPECT_EQ(id, s.PointFinding(t.coord + t.size / 2));
     }
   }
 }
