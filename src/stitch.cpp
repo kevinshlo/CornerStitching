@@ -114,7 +114,7 @@ Id Stitch::AreaSearch(const Tile& area, Id start) const {
         if (!Ref(id).is_space) return id;
     } else {  // not solid tile found
       // then move down to the next tile overlapping the area
-      for (id = Ref(id).lb; Exist(id); id = Ref(id).lb) {
+      for (id = Ref(id).lb; Exist(id); id = Ref(id).tr) {
         if (area.Overlap(Ref(id))) break;
       }
     }
