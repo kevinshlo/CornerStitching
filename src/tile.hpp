@@ -21,8 +21,8 @@ struct Pt {
   bool InQuadrantI() const { return (x >= 0) && (y >= 0); }
   // represents legal width & height relative to `coord` (default:(0, 0))
   bool IsSize(const Pt& coord = {0, 0}) const {
-    return (0 < x) && (x <= (kLenMax - coord.x)) &&  //
-           (0 < y) && (y <= (kLenMax - coord.y));
+    return (0 <= x) && (x <= (kLenMax - coord.x)) &&  //
+           (0 <= y) && (y <= (kLenMax - coord.y));
   }
 };
 
@@ -83,11 +83,13 @@ struct Tile {
   }
   /* `t` geometrically overlaps with this tile */
   bool Overlap(const Tile& t) const { return OverlapX(t) && OverlapY(t); }
-  /* the vertical line at `coord` with length `l` */
+  /* the vertical line at `coord` with length `l` overlaps? */
   bool OverlapVerticalLine(const Pt& coord, Len l) const {
-    Tile line;
-    line.coord = coord, line.size = Pt(0, l);
-    return Overlap(line);
+    return Overlap({coord, {0, l}});
+  }
+  /* the horizontal line at `coord` with length `l` overlaps? */
+  bool OverlapHorizontalLine(const Pt& coord, Len l) const {
+    return Overlap({coord, {l, 0}});
   }
 
   bool IsRightNeighborTo(const Tile& t) const {
