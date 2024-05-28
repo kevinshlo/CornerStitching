@@ -107,13 +107,27 @@ TEST(Stitch, PointFinding1) {
     for (auto id : ids) {
       const auto& t = s.tiles_[id].value();
       EXPECT_EQ(id, s.PointFinding(t.coord, start));
-      EXPECT_NE(id, s.PointFinding(t.coord + Pt(t.size.x, 0), start));
       EXPECT_EQ(id, s.PointFinding(t.coord + Pt(t.size.x - 0.1, 0), start));
-      EXPECT_NE(id, s.PointFinding(t.coord + Pt(0, t.size.y), start));
       EXPECT_EQ(id, s.PointFinding(t.coord + Pt(0, t.size.y - 0.1), start));
-      EXPECT_NE(id, s.PointFinding(t.coord + t.size, start));
       EXPECT_EQ(id, s.PointFinding(t.coord + t.size + Pt(-0.1, -0.1), start));
       EXPECT_EQ(id, s.PointFinding(t.coord + t.size / 2));
+      if (s.Ref(id).rt == kNullId && s.Ref(id).tr == kNullId) {
+        EXPECT_EQ(id, s.PointFinding(t.coord + Pt(t.size.x, 0), start));
+        EXPECT_EQ(id, s.PointFinding(t.coord + Pt(0, t.size.y), start));
+        EXPECT_EQ(id, s.PointFinding(t.coord + t.size, start));
+      } else if (s.Ref(id).tr == kNullId) {
+        EXPECT_EQ(id, s.PointFinding(t.coord + Pt(t.size.x, 0), start));
+        EXPECT_NE(id, s.PointFinding(t.coord + Pt(0, t.size.y), start));
+        EXPECT_NE(id, s.PointFinding(t.coord + t.size, start));
+      } else if (s.Ref(id).rt == kNullId) {
+        EXPECT_NE(id, s.PointFinding(t.coord + Pt(t.size.x, 0), start));
+        EXPECT_EQ(id, s.PointFinding(t.coord + Pt(0, t.size.y), start));
+        EXPECT_NE(id, s.PointFinding(t.coord + t.size, start));
+      } else {
+        EXPECT_NE(id, s.PointFinding(t.coord + Pt(t.size.x, 0), start));
+        EXPECT_NE(id, s.PointFinding(t.coord + Pt(0, t.size.y), start));
+        EXPECT_NE(id, s.PointFinding(t.coord + t.size, start));
+      }
     }
   }
 }
@@ -168,7 +182,7 @@ TEST(Stitch, AreaSearch1) {
     EXPECT_EQ(t.is_space ? kNullId : id, s.AreaSearch(t));
   }
   // Area Search the whole plane
-  EXPECT_EQ(18, s.AreaSearch(Tile(s.coord_, s.size_ - Pt(0.1, 0.1))));
+  EXPECT_EQ(18, s.AreaSearch({s.coord_, s.size_}));
   // Custom cases
   EXPECT_EQ(6, s.AreaSearch({{0, 5}, {9, 8}}, 9));
   EXPECT_EQ(11, s.AreaSearch({{0, 2}, {19, 12}}, 4));
@@ -176,4 +190,30 @@ TEST(Stitch, AreaSearch1) {
   EXPECT_EQ(11, s.AreaSearch({{12, 12}, {1, 1}}, 9));
   EXPECT_EQ(2, s.AreaSearch({{9, 2}, {21, 5}}, 20));
   EXPECT_EQ(14, s.AreaSearch({{17, 13}, {13, 5}}));
+}
+
+TEST(Stitch, AreaEnum1) {
+  Example example = Example::Example1();
+  const auto& s = example.stitch;
+  // collect id of existing tiles
+  std::vector<Id> ids;
+  for (size_t i = 0; i < s.tiles_.size(); i++)
+    if (s.At(i).has_value()) ids.push_back(i);
+  // AreaEnum self should return {self}
+  for (auto id : ids) EXPECT_EQ(std::vector<Id>{id}, s.AreaEnum(s.Ref(id)));
+  // AreaEnum the whole plane
+  EXPECT_EQ((std::vector<Id>{20, 17, 18, 19, 16, 13, 5, 6, 10, 11, 14,
+                             15, 12, 9,  7,  1,  2,  8, 3, 4,  0}),
+            s.AreaEnum({s.coord_, s.size_}));
+  // Custom cases
+  EXPECT_EQ((std::vector<Id>{5, 6, 10, 11, 9, 7, 1, 0}),
+            s.AreaEnum({s.coord_, s.size_ / 2}));
+  EXPECT_EQ((std::vector<Id>{20, 19, 16, 11, 14, 15, 12}),
+            s.AreaEnum({s.coord_ + s.size_ / 2, s.size_ / 2}));
+  EXPECT_EQ((std::vector<Id>{11, 12, 9, 2, 8, 3, 4, 0}),
+            s.AreaEnum({s.coord_ + Pt(s.size_.x / 2, 0), s.size_ / 2}));
+  EXPECT_EQ((std::vector<Id>{20, 17, 18, 19, 16, 13, 5, 6, 10, 11}),
+            s.AreaEnum({s.coord_ + Pt(0, s.size_.y / 2), s.size_ / 2}));
+  EXPECT_EQ((std::vector<Id>{16, 13, 6, 10, 11, 14, 12, 9, 7, 2, 8}),
+            s.AreaEnum({s.coord_ + s.size_ / 4, s.size_ / 2}));
 }

@@ -32,8 +32,16 @@ class Stitch {
   std::vector<Id> BottomNeighborFinding(Id id) const;
   // find the left-most-top solid tile in the given area
   Id AreaSearch(const Tile& area, Id start = kNullId) const;
+  // enumerate all tiles in the given area,
+  // each tile is visited after all its upper & left tiles are visited
+  std::vector<Id> AreaEnum(const Tile& area, Id start = kNullId) const;
+
   Tile& InsertTile(Tile Tile);
   Tile& DeleteTile(Tile Tile);
+
+ protected:
+  // the recursive R procedure called by AreaEnum
+  void AreaEnumHelper(const Tile& area, std::vector<Id>& enums, Id id) const;
 
 #ifdef GTEST
  public:
