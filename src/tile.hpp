@@ -44,10 +44,15 @@ struct Tile {
   Tile(const Pt& coord, const Pt& size, Id bl, Id lb, Id tr, Id rt,
        bool is_space = true);
 
+  Pt LowerLeftCorner() const { return coord; }
+  Pt LowerRightCorner() const { return coord + Pt(size.x, 0); }
+  Pt UpperLeftCorner() const { return coord + Pt(0, size.y); }
+  Pt UpperRightCorner() const { return coord + size; }
+
   enum Cmp {
     LT = -1,  // lefter/lower then the tile for a dimension
-    EQ = 0,   // contained inside
-    GT = 1    // righter/higher
+    EQ = 0,   // contained inside (opened right/upper)
+    GT = 1    // righter/upper
   };
   /* relative position of `x` along x-axis to this tile */
   Cmp CmpX(Len x) const {
@@ -63,14 +68,26 @@ struct Tile {
   Cmp CmpY(const Pt& p) const { return CmpY(p.y); }
   /* `p` lies inside this tile? */
   bool Contain(const Pt& p) const { return CmpX(p.x) == EQ && CmpY(p.y) == EQ; }
+  /* `t` lies inside this tile? */
+  bool Contain(const Tile& t) const {
+    return Contain(t.coord) && !t.Contain(coord + size);
+  }
 
   /* `t` and this tile overlaps along x-axis? */
   bool OverlapX(const Tile& t) const {
-    return (CmpX(t.coord) != GT) && (CmpX(t.coord + t.size) != LT);
+    return (CmpX(t.coord) == EQ) || (t.CmpX(coord) == EQ);
   }
   /* `t` and this tile overlaps along y-axis? */
   bool OverlapY(const Tile& t) const {
-    return (CmpY(t.coord) != GT) && (CmpY(t.coord + t.size) != LT);
+    return (CmpY(t.coord) == EQ) || (t.CmpY(coord) == EQ);
+  }
+  /* `t` geometrically overlaps with this tile */
+  bool Overlap(const Tile& t) const { return OverlapX(t) && OverlapY(t); }
+  /* the vertical line at `coord` with length `l` */
+  bool OverlapVerticalLine(const Pt& coord, Len l) const {
+    Tile line;
+    line.coord = coord, line.size = Pt(0, l);
+    return Overlap(line);
   }
 
   bool IsRightNeighborTo(const Tile& t) const {
