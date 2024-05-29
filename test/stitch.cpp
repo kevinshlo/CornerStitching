@@ -263,6 +263,16 @@ TEST(test_helper, Neighbors) {
   }
 }
 
+void CheckNeighbors(const Stitch& s) {
+  for (size_t id = 0; id < s.tiles_.size(); id++) {
+    if (!s.tiles_[id].has_value()) continue;
+    EXPECT_EQ(Neighbors(s, id, RIGHT), s.RightNeighborFinding(id)) << id;
+    EXPECT_EQ(Neighbors(s, id, LEFT), s.LeftNeighborFinding(id)) << id;
+    EXPECT_EQ(Neighbors(s, id, TOP), s.TopNeighborFinding(id)) << id;
+    EXPECT_EQ(Neighbors(s, id, BOTTOM), s.BottomNeighborFinding(id)) << id;
+  }
+}
+
 TEST(Stitch, VerticalSplit1) {
   Example example = Example::Example1();
   auto& s = example.stitch;
@@ -274,30 +284,7 @@ TEST(Stitch, VerticalSplit1) {
   for (auto id : ids) {
     auto n_id = s.VerticalSplit(id, s.Ref(id).coord.x + s.Ref(id).size.x / 2);
     EXPECT_NE(n_id, id) << "should return id of new tile";
-    for (auto side : {RIGHT, LEFT, TOP, BOTTOM}) {
-      switch (side) {
-        case RIGHT:
-          EXPECT_EQ(Neighbors(s, id, side), s.RightNeighborFinding(id)) << id;
-          EXPECT_EQ(Neighbors(s, n_id, side), s.RightNeighborFinding(n_id))
-              << n_id;
-          break;
-        case LEFT:
-          EXPECT_EQ(Neighbors(s, id, side), s.LeftNeighborFinding(id)) << id;
-          EXPECT_EQ(Neighbors(s, n_id, side), s.LeftNeighborFinding(n_id))
-              << n_id;
-          break;
-        case TOP:
-          EXPECT_EQ(Neighbors(s, id, side), s.TopNeighborFinding(id)) << id;
-          EXPECT_EQ(Neighbors(s, n_id, side), s.TopNeighborFinding(n_id))
-              << n_id;
-          break;
-        default:
-          EXPECT_EQ(Neighbors(s, id, side), s.BottomNeighborFinding(id)) << id;
-          EXPECT_EQ(Neighbors(s, n_id, side), s.BottomNeighborFinding(n_id))
-              << n_id;
-          break;
-      }
-    }
+    CheckNeighbors(s);
   }
 }
 
@@ -312,29 +299,6 @@ TEST(Stitch, HorizontalSplit1) {
   for (auto id : ids) {
     auto n_id = s.HorizontalSplit(id, s.Ref(id).coord.y + s.Ref(id).size.y / 2);
     EXPECT_NE(n_id, id) << "should return id of new tile";
-    for (auto side : {RIGHT, LEFT, TOP, BOTTOM}) {
-      switch (side) {
-        case RIGHT:
-          EXPECT_EQ(Neighbors(s, id, side), s.RightNeighborFinding(id)) << id;
-          EXPECT_EQ(Neighbors(s, n_id, side), s.RightNeighborFinding(n_id))
-              << n_id;
-          break;
-        case LEFT:
-          EXPECT_EQ(Neighbors(s, id, side), s.LeftNeighborFinding(id)) << id;
-          EXPECT_EQ(Neighbors(s, n_id, side), s.LeftNeighborFinding(n_id))
-              << n_id;
-          break;
-        case TOP:
-          EXPECT_EQ(Neighbors(s, id, side), s.TopNeighborFinding(id)) << id;
-          EXPECT_EQ(Neighbors(s, n_id, side), s.TopNeighborFinding(n_id))
-              << n_id;
-          break;
-        default:
-          EXPECT_EQ(Neighbors(s, id, side), s.BottomNeighborFinding(id)) << id;
-          EXPECT_EQ(Neighbors(s, n_id, side), s.BottomNeighborFinding(n_id))
-              << n_id;
-          break;
-      }
-    }
+    CheckNeighbors(s);
   }
 }
