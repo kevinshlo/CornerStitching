@@ -152,6 +152,15 @@ std::vector<Id> Stitch::AreaEnum(const Tile& area, Id start) const {
   return enums;
 }
 
+Id Stitch::LastInserted() const {
+  if (Exist(last_inserted_))
+    return last_inserted_;
+  else if (NumTiles() > 0)
+    for (int i = tiles_.size() - 1; i >= 0; i--)
+      if (tiles_[i].has_value()) return i;
+  return kNullId;
+}
+
 void Stitch::AreaEnumHelper(const Tile& area, std::vector<Id>& enums,
                             Id id) const {
   // 1. Enumerate the tile
@@ -184,11 +193,160 @@ void Stitch::AreaEnumHelper(const Tile& area, std::vector<Id>& enums,
   }
 }
 
-Id Stitch::LastInserted() const {
-  if (Exist(last_inserted_))
-    return last_inserted_;
-  else if (NumTiles() > 0)
-    for (int i = tiles_.size() - 1; i >= 0; i--)
-      if (tiles_[i].has_value()) return i;
-  return kNullId;
+Id Stitch::AllocTile() {
+  Id id = kNullId;
+  if (slots_.size()) {
+    id = slots_.top();
+    slots_.pop();
+    tiles_[id] = Tile();
+  } else {
+    id = tiles_.size();
+    tiles_.push_back(Tile());
+  }
+  return id;
+}
+
+int Stitch::FreeTile(Id id) {
+  if (id != kNullId && 0 <= id && (size_t)id < tiles_.size()) {
+    tiles_[id] = std::nullopt;
+    slots_.push(id);
+    return 0;
+  } else {
+    return 1;
+  }
+}
+
+Id Stitch::VerticalSplit(Id left, Len x) {
+  if (!Exist(left) || Ref(left).CmpX(x) != Tile::EQ ||
+      Ref(left).coord.x == x)  // cannot split on edge
+    return kNullId;
+  // create a copy (left is the original tile)
+  Id right = AllocTile();
+  Ref(right) = Ref(left);
+  // collect neighbors of the original tile
+  auto right_neighbors = RightNeighborFinding(left);
+  auto bottom_neighbors = BottomNeighborFinding(left);
+  auto top_neighbors = TopNeighborFinding(left);
+  // update coord & size of the original & new tiles
+  auto orig_size_x = Ref(left).size.x;
+  Ref(left).size.x = x - Ref(left).coord.x;
+  Ref(right).coord.x = x;
+  Ref(right).size.x -= Ref(left).size.x;
+  assert(orig_size_x == (Ref(left).size.x + Ref(right).size.x));
+  // adjust the stitch between original & new tiles
+  Ref(right).bl = left;
+  Ref(left).tr = right;
+  Ref(right).lb = Ref(left).rt = kNullId;  // to be determined
+  // Update the stitches in tiles that are now adj to the new tile
+  // 1. for right, if bl = orig, change to new
+  for (auto id : right_neighbors)
+    if (Ref(id).bl == left) Ref(id).bl = right;
+  // 2. for lower, if rt = orig, change to new if it touches new
+  for (auto id : bottom_neighbors) {
+    if (Ref(id).rt == left && Ref(right).IsTopNeighborTo(Ref(id)))
+      Ref(id).rt = right;
+    if (Ref(right).lb == kNullId && Ref(right).IsTopNeighborTo(Ref(id)))
+      Ref(right).lb = id;  // must be the left-most
+  }
+  // 3. for top, if lb = orig, change to new if it does not touch orig
+  for (auto id : top_neighbors) {
+    if (Ref(id).lb == left && !Ref(left).IsBottomNeighborTo(Ref(id)))
+      Ref(id).lb = right;
+    if (Ref(left).rt == kNullId && Ref(left).IsBottomNeighborTo(Ref(id)))
+      Ref(left).rt = id;  // must be the right-most
+  }
+  return right;
+}
+
+Id Stitch::HorizontalSplit(Id lower, Len y) {
+  if (!Exist(lower) || Ref(lower).CmpY(y) != Tile::EQ ||
+      Ref(lower).coord.y == y)  // cannot split on edge
+    return kNullId;
+  // create a copy (lower is the original tile)
+  Id upper = AllocTile();  // (upper is the new tile)
+  Ref(upper) = Ref(lower);
+  // collect neighbors of the original tile
+  auto top_neighbors = TopNeighborFinding(lower);
+  auto left_neighbors = LeftNeighborFinding(lower);
+  auto right_neighbors = RightNeighborFinding(lower);
+  // update coord & size of original & new tiles
+  auto orig_size_y = Ref(lower).size.y;
+  Ref(lower).size.y = y - Ref(lower).coord.y;
+  Ref(upper).coord.y = y;
+  Ref(upper).size.y -= Ref(lower).size.y;
+  assert(orig_size_y == (Ref(lower).size.y + Ref(upper).size.y));
+  // adjust the stitch between original & new tiles
+  Ref(upper).lb = lower;
+  Ref(lower).rt = upper;
+  Ref(upper).bl = Ref(lower).tr = kNullId;  // to be determined
+  // Update the stitches in tiles that are now adj to the new tile
+  // 1. for upper, if lb = orig, change to new
+  for (auto id : top_neighbors)
+    if (Ref(id).lb == lower) Ref(id).lb = upper;
+  // 2. for left, if tr = orig, change to new if it touches new
+  for (auto id : left_neighbors) {
+    if (Ref(id).tr == lower && Ref(upper).IsRightNeighborTo(Ref(id)))
+      Ref(id).tr = upper;
+    if (Ref(upper).bl == kNullId && Ref(upper).IsRightNeighborTo(Ref(id)))
+      Ref(upper).bl = id;  // must be the lowest
+  }
+  // 3. for right, if bl = orig, change to to new if it does not touch orig
+  for (auto id : right_neighbors) {
+    if (Ref(id).bl == lower && !Ref(lower).IsLeftNeighborTo(Ref(id)))
+      Ref(id).bl = upper;
+    if (Ref(lower).tr == kNullId && Ref(lower).IsLeftNeighborTo(Ref(id)))
+      Ref(lower).tr = id;  // must be the highest
+  }
+  return upper;
+}
+
+Id Stitch::VerticalMerge(Id left, Id right) {
+  if (Ref(left).coord.y != Ref(right).coord.y ||
+      Ref(left).size.y != Ref(right).size.y)  // must align
+    return kNullId;
+  if (Ref(left).coord.x > Ref(right).coord.x) std::swap(left, right);
+  // update stitches touching new (right)
+  // 1. for right, if bl = new, change to orig
+  for (auto id : RightNeighborFinding(right))
+    if (Ref(id).bl == right) Ref(id).bl = left;
+  // 2. for lower, if rt = new, change to orig
+  for (auto id : BottomNeighborFinding(right))
+    if (Ref(id).rt == right) Ref(id).rt = left;
+  // 3. for top, if lb = new, change to orig
+  for (auto id : TopNeighborFinding(right))
+    if (Ref(id).lb == right) Ref(id).lb = left;
+  // adjust the stitch of original tile
+  Ref(left).tr = Ref(right).tr;
+  Ref(left).rt = Ref(right).rt;
+  // update coord & size of original tile
+  Ref(left).size.x = Ref(right).coord.x + Ref(right).size.x - Ref(left).coord.x;
+  // free the new tile
+  FreeTile(right);
+  return left;
+}
+
+Id Stitch::HorizontalMerge(Id lower, Id upper) {
+  if (Ref(lower).coord.x != Ref(upper).coord.x ||
+      Ref(lower).size.x != Ref(upper).size.x)  // must align
+    return kNullId;
+  if (Ref(lower).coord.y > Ref(upper).coord.y) std::swap(lower, upper);
+  // update stitches touching new (upper)
+  // 1. for upper, if lb = new, change to orig
+  for (auto id : TopNeighborFinding(upper))
+    if (Ref(id).lb == upper) Ref(id).lb = lower;
+  // 2. for left, if tr = new, change to orig
+  for (auto id : LeftNeighborFinding(upper))
+    if (Ref(id).tr == upper) Ref(id).tr = lower;
+  // 3. for right, if bl = new, change to orig
+  for (auto id : RightNeighborFinding(upper))
+    if (Ref(id).bl == upper) Ref(id).bl = lower;
+  // adjust the stitch of original tile
+  Ref(lower).tr = Ref(upper).tr;
+  Ref(lower).rt = Ref(upper).rt;
+  // update coord & size of original tile
+  Ref(lower).size.y =
+      Ref(upper).coord.y + Ref(upper).size.y - Ref(lower).coord.y;
+  // free the new tile
+  FreeTile(upper);
+  return lower;
 }
