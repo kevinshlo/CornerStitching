@@ -184,6 +184,127 @@ void Stitch::AreaEnumHelper(const Tile& area, std::vector<Id>& enums,
   }
 }
 
+Id Stitch::AllocTile() {
+  Id id = kNullId;
+  if (slots_.size()) {
+    id = slots_.top();
+    slots_.pop();
+    tiles_[id] = Tile();
+  } else {
+    id = tiles_.size();
+    tiles_.push_back(Tile());
+  }
+  return id;
+}
+
+int Stitch::FreeTile(Id id) {
+  if (id != kNullId && 0 <= id && (size_t)id < tiles_.size()) {
+    tiles_[id] = std::nullopt;
+    slots_.push(id);
+    return 0;
+  } else {
+    return 1;
+  }
+}
+
+Id Stitch::VerticalSplit(Id left, Len x) {
+  if (!Exist(left) || Ref(left).CmpX(x) != Tile::EQ ||
+      Ref(left).coord.x == x)  // cannot split on edge
+    return kNullId;
+  // create a copy (left is the original tile)
+  Id right = AllocTile();
+  Ref(right) = Ref(left);
+  // collect neighbors of the original tile
+  auto right_neighbors = RightNeighborFinding(left);
+  auto bottom_neighbors = BottomNeighborFinding(left);
+  auto top_neighbors = TopNeighborFinding(left);
+  // update coord & size of the original & new tiles
+  auto orig_size_x = Ref(left).size.x;
+  Ref(left).size.x = x - Ref(left).coord.x;
+  Ref(right).coord.x = x;
+  Ref(right).size.x -= Ref(left).size.x;
+  assert(orig_size_x == (Ref(left).size.x + Ref(right).size.x));
+  // adjust the stitch between original & new tiles
+  Ref(right).bl = left;
+  Ref(left).tr = right;
+  Ref(right).lb = Ref(left).rt = kNullId;  // to be determined
+  // Update the stitches in tiles that are now adj to the new tile
+  // 1. for right, if bl = orig, change to new
+  for (auto id : right_neighbors)
+    if (Ref(id).bl == left) Ref(id).bl = right;
+  // 2. for lower, if rt = orig, change to new if it touches new
+  for (auto id : bottom_neighbors) {
+    if (Ref(id).rt == left) {
+      if (Ref(right).IsTopNeighborTo(Ref(id))) {
+        Ref(id).rt = right;
+        // the first satisfying below must be the right-most
+        if (Ref(right).lb == kNullId) Ref(right).lb = id;
+      }
+    }
+  }
+  // 3. for top, if lb = orig, change to new if it does not touch orig
+  for (auto id : top_neighbors) {
+    if (Ref(id).lb == left) {
+      Ref(id).lb = right;  // flip
+      if (Ref(left).IsBottomNeighborTo(Ref(id))) {
+        Ref(id).lb = left;
+        // the first satisfying below must be the right-most
+        if (Ref(left).rt == kNullId) Ref(left).rt = id;
+      }
+    }
+  }
+  return right;
+}
+
+Id Stitch::HorizontalSplit(Id lower, Len y) {
+  if (!Exist(lower) || Ref(lower).CmpY(y) != Tile::EQ ||
+      Ref(lower).coord.y == y)  // cannot split on edge
+    return kNullId;
+  // create a copy (lower is the original tile)
+  Id upper = AllocTile();  // (upper is the new tile)
+  Ref(upper) = Ref(lower);
+  // collect neighbors of the original tile
+  auto top_neighbors = TopNeighborFinding(lower);
+  auto left_neighbors = LeftNeighborFinding(lower);
+  auto right_neighbors = RightNeighborFinding(lower);
+  // update coord & size of original & new tiles
+  auto orig_size_y = Ref(lower).size.y;
+  Ref(lower).size.y = y - Ref(lower).coord.y;
+  Ref(upper).coord.y = y;
+  Ref(upper).size.y -= Ref(lower).size.y;
+  assert(orig_size_y == (Ref(lower).size.y + Ref(upper).size.y));
+  // adjust the stitch between original & new tiles
+  Ref(upper).lb = lower;
+  Ref(lower).rt = upper;
+  Ref(upper).bl = Ref(lower).tr = kNullId;  // to be determined
+  // Update the stitches in tiles that are now adj to the new tile
+  // 1. for upper, if lb = orig, change to new
+  for (auto id : top_neighbors)
+    if (Ref(id).lb == lower) Ref(id).lb = upper;
+  // 2. for left, if tr = orig, change to new if it touches new
+  for (auto id : left_neighbors) {
+    if (Ref(id).tr == lower) {
+      if (Ref(upper).IsRightNeighborTo(Ref(id))) {
+        Ref(id).tr = upper;
+        // the first satisfying below must be the lowest
+        if (Ref(upper).bl == kNullId) Ref(upper).bl = id;
+      }
+    }
+  }
+  // 3. for right, if bl = orig, change to to new if it does not touch orig
+  for (auto id : right_neighbors) {
+    if (Ref(id).bl == lower) {
+      Ref(id).bl = upper;  // flip
+      if (Ref(lower).IsLeftNeighborTo(Ref(id))) {
+        Ref(id).bl = lower;
+        // the first satisfying below must be the highest
+        if (Ref(lower).tr == kNullId) Ref(lower).tr = id;
+      }
+    }
+  }
+  return upper;
+}
+
 Id Stitch::LastInserted() const {
   if (Exist(last_inserted_))
     return last_inserted_;

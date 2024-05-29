@@ -36,12 +36,8 @@ class Stitch {
   // each tile is visited after all its upper & left tiles are visited
   std::vector<Id> AreaEnum(const Tile& area, Id start = kNullId) const;
 
-  Tile& InsertTile(Tile Tile);
-  Tile& DeleteTile(Tile Tile);
-
- protected:
-  // the recursive R procedure called by AreaEnum
-  void AreaEnumHelper(const Tile& area, std::vector<Id>& enums, Id id) const;
+  Id InsertTile(Tile tile);
+  Id DeleteTile(Tile tile);
 
 #ifdef GTEST
  public:
@@ -64,4 +60,16 @@ class Stitch {
            tiles_[id].has_value();
   }
   Id LastInserted() const;
+  // the recursive R procedure called by AreaEnum
+  void AreaEnumHelper(const Tile& area, std::vector<Id>& enums, Id id) const;
+  // allocate a new tile, return its id
+  Id AllocTile();
+  // free tile `id`, return 0 if success else return 1
+  int FreeTile(Id id);
+  // vertically split tile `id` along line x=`x`
+  Id VerticalSplit(Id id, Len x);
+  // horizontally split tile `id` along line y=`y`
+  Id HorizontalSplit(Id id, Len y);
+  // Merge tiles `id1` & `id2`
+  Id Merge(Id id1, Id id2);
 };
