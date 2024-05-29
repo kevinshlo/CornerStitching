@@ -273,6 +273,45 @@ TEST(Stitch, VerticalSplit1) {
   // test
   for (auto id : ids) {
     auto n_id = s.VerticalSplit(id, s.Ref(id).coord.x + s.Ref(id).size.x / 2);
+    EXPECT_NE(n_id, id) << "should return id of new tile";
+    for (auto side : {RIGHT, LEFT, TOP, BOTTOM}) {
+      switch (side) {
+        case RIGHT:
+          EXPECT_EQ(Neighbors(s, id, side), s.RightNeighborFinding(id)) << id;
+          EXPECT_EQ(Neighbors(s, n_id, side), s.RightNeighborFinding(n_id))
+              << n_id;
+          break;
+        case LEFT:
+          EXPECT_EQ(Neighbors(s, id, side), s.LeftNeighborFinding(id)) << id;
+          EXPECT_EQ(Neighbors(s, n_id, side), s.LeftNeighborFinding(n_id))
+              << n_id;
+          break;
+        case TOP:
+          EXPECT_EQ(Neighbors(s, id, side), s.TopNeighborFinding(id)) << id;
+          EXPECT_EQ(Neighbors(s, n_id, side), s.TopNeighborFinding(n_id))
+              << n_id;
+          break;
+        default:
+          EXPECT_EQ(Neighbors(s, id, side), s.BottomNeighborFinding(id)) << id;
+          EXPECT_EQ(Neighbors(s, n_id, side), s.BottomNeighborFinding(n_id))
+              << n_id;
+          break;
+      }
+    }
+  }
+}
+
+TEST(Stitch, HorizontalSplit1) {
+  Example example = Example::Example1();
+  auto& s = example.stitch;
+  // collect id of existing tiles
+  std::vector<Id> ids;
+  for (size_t i = 0; i < s.tiles_.size(); i++)
+    if (s.tiles_[i].has_value()) ids.push_back(i);
+  // test
+  for (auto id : ids) {
+    auto n_id = s.HorizontalSplit(id, s.Ref(id).coord.y + s.Ref(id).size.y / 2);
+    EXPECT_NE(n_id, id) << "should return id of new tile";
     for (auto side : {RIGHT, LEFT, TOP, BOTTOM}) {
       switch (side) {
         case RIGHT:

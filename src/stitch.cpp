@@ -234,18 +234,15 @@ Id Stitch::VerticalSplit(Id left, Len x) {
     if (Ref(id).bl == left) Ref(id).bl = right;
   // 2. for lower, if rt = orig, change to new if it touches new
   for (auto id : bottom_neighbors) {
-    if (Ref(id).rt == left) {
-      if (Ref(right).IsTopNeighborTo(Ref(id))) Ref(id).rt = right;
-    }
+    if (Ref(id).rt == left && Ref(right).IsTopNeighborTo(Ref(id)))
+      Ref(id).rt = right;
     if (Ref(right).lb == kNullId && Ref(right).IsTopNeighborTo(Ref(id)))
       Ref(right).lb = id;  // must be the left-most
   }
   // 3. for top, if lb = orig, change to new if it does not touch orig
   for (auto id : top_neighbors) {
-    if (Ref(id).lb == left) {
-      Ref(id).lb = right;  // flip
-      if (Ref(left).IsBottomNeighborTo(Ref(id))) Ref(id).lb = left;
-    }
+    if (Ref(id).lb == left && !Ref(left).IsBottomNeighborTo(Ref(id)))
+      Ref(id).lb = right;
     if (Ref(left).rt == kNullId && Ref(left).IsBottomNeighborTo(Ref(id)))
       Ref(left).rt = id;  // must be the right-most
   }
@@ -279,18 +276,15 @@ Id Stitch::HorizontalSplit(Id lower, Len y) {
     if (Ref(id).lb == lower) Ref(id).lb = upper;
   // 2. for left, if tr = orig, change to new if it touches new
   for (auto id : left_neighbors) {
-    if (Ref(id).tr == lower) {
-      if (Ref(upper).IsRightNeighborTo(Ref(id))) Ref(id).tr = upper;
-    }
+    if (Ref(id).tr == lower && Ref(upper).IsRightNeighborTo(Ref(id)))
+      Ref(id).tr = upper;
     if (Ref(upper).bl == kNullId && Ref(upper).IsRightNeighborTo(Ref(id)))
       Ref(upper).bl = id;  // must be the lowest
   }
   // 3. for right, if bl = orig, change to to new if it does not touch orig
   for (auto id : right_neighbors) {
-    if (Ref(id).bl == lower) {
-      Ref(id).bl = upper;  // flip
-      if (Ref(lower).IsLeftNeighborTo(Ref(id))) Ref(id).bl = lower;
-    }
+    if (Ref(id).bl == lower && !Ref(lower).IsLeftNeighborTo(Ref(id)))
+      Ref(id).bl = upper;
     if (Ref(lower).tr == kNullId && Ref(lower).IsLeftNeighborTo(Ref(id)))
       Ref(lower).tr = id;  // must be the highest
   }
