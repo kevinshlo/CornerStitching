@@ -273,32 +273,50 @@ void CheckNeighbors(const Stitch& s) {
   }
 }
 
-TEST(Stitch, VerticalSplit1) {
+TEST(Stitch, VerticalSplitMerge1) {
   Example example = Example::Example1();
   auto& s = example.stitch;
   // collect id of existing tiles
   std::vector<Id> ids;
   for (size_t i = 0; i < s.tiles_.size(); i++)
     if (s.tiles_[i].has_value()) ids.push_back(i);
-  // test
+  // test split
+  std::vector<Id> nids;
   for (auto id : ids) {
-    auto n_id = s.VerticalSplit(id, s.Ref(id).coord.x + s.Ref(id).size.x / 2);
-    EXPECT_NE(n_id, id) << "should return id of new tile";
+    auto nid = s.VerticalSplit(id, s.Ref(id).coord.x + s.Ref(id).size.x / 2);
+    EXPECT_NE(nid, id) << "should return id of new tile";
+    CheckNeighbors(s);
+    nids.push_back(nid);
+  }
+  // test merge
+  for (size_t i = 0; i < ids.size(); i++) {
+    Id id = ids[i], nid = nids[i];
+    auto mrg = s.VerticalMerge(id, nid);
+    EXPECT_EQ(id, mrg);
     CheckNeighbors(s);
   }
 }
 
-TEST(Stitch, HorizontalSplit1) {
+TEST(Stitch, HorizontalSplitMerge1) {
   Example example = Example::Example1();
   auto& s = example.stitch;
   // collect id of existing tiles
   std::vector<Id> ids;
   for (size_t i = 0; i < s.tiles_.size(); i++)
     if (s.tiles_[i].has_value()) ids.push_back(i);
-  // test
+  // test split
+  std::vector<Id> nids;
   for (auto id : ids) {
-    auto n_id = s.HorizontalSplit(id, s.Ref(id).coord.y + s.Ref(id).size.y / 2);
-    EXPECT_NE(n_id, id) << "should return id of new tile";
+    auto nid = s.HorizontalSplit(id, s.Ref(id).coord.y + s.Ref(id).size.y / 2);
+    EXPECT_NE(nid, id) << "should return id of new tile";
+    CheckNeighbors(s);
+    nids.push_back(nid);
+  }
+  // test merge
+  for (size_t i = 0; i < ids.size(); i++) {
+    Id id = ids[i], nid = nids[i];
+    auto mrg = s.HorizontalMerge(id, nid);
+    EXPECT_EQ(id, mrg);
     CheckNeighbors(s);
   }
 }
