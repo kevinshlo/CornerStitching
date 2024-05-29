@@ -235,23 +235,19 @@ Id Stitch::VerticalSplit(Id left, Len x) {
   // 2. for lower, if rt = orig, change to new if it touches new
   for (auto id : bottom_neighbors) {
     if (Ref(id).rt == left) {
-      if (Ref(right).IsTopNeighborTo(Ref(id))) {
-        Ref(id).rt = right;
-        // the first satisfying below must be the right-most
-        if (Ref(right).lb == kNullId) Ref(right).lb = id;
-      }
+      if (Ref(right).IsTopNeighborTo(Ref(id))) Ref(id).rt = right;
     }
+    if (Ref(right).lb == kNullId && Ref(right).IsTopNeighborTo(Ref(id)))
+      Ref(right).lb = id;  // must be the left-most
   }
   // 3. for top, if lb = orig, change to new if it does not touch orig
   for (auto id : top_neighbors) {
     if (Ref(id).lb == left) {
       Ref(id).lb = right;  // flip
-      if (Ref(left).IsBottomNeighborTo(Ref(id))) {
-        Ref(id).lb = left;
-        // the first satisfying below must be the right-most
-        if (Ref(left).rt == kNullId) Ref(left).rt = id;
-      }
+      if (Ref(left).IsBottomNeighborTo(Ref(id))) Ref(id).lb = left;
     }
+    if (Ref(left).rt == kNullId && Ref(left).IsBottomNeighborTo(Ref(id)))
+      Ref(left).rt = id;  // must be the right-most
   }
   return right;
 }
@@ -284,23 +280,19 @@ Id Stitch::HorizontalSplit(Id lower, Len y) {
   // 2. for left, if tr = orig, change to new if it touches new
   for (auto id : left_neighbors) {
     if (Ref(id).tr == lower) {
-      if (Ref(upper).IsRightNeighborTo(Ref(id))) {
-        Ref(id).tr = upper;
-        // the first satisfying below must be the lowest
-        if (Ref(upper).bl == kNullId) Ref(upper).bl = id;
-      }
+      if (Ref(upper).IsRightNeighborTo(Ref(id))) Ref(id).tr = upper;
     }
+    if (Ref(upper).bl == kNullId && Ref(upper).IsRightNeighborTo(Ref(id)))
+      Ref(upper).bl = id;  // must be the lowest
   }
   // 3. for right, if bl = orig, change to to new if it does not touch orig
   for (auto id : right_neighbors) {
     if (Ref(id).bl == lower) {
       Ref(id).bl = upper;  // flip
-      if (Ref(lower).IsLeftNeighborTo(Ref(id))) {
-        Ref(id).bl = lower;
-        // the first satisfying below must be the highest
-        if (Ref(lower).tr == kNullId) Ref(lower).tr = id;
-      }
+      if (Ref(lower).IsLeftNeighborTo(Ref(id))) Ref(id).bl = lower;
     }
+    if (Ref(lower).tr == kNullId && Ref(lower).IsLeftNeighborTo(Ref(id)))
+      Ref(lower).tr = id;  // must be the highest
   }
   return upper;
 }
