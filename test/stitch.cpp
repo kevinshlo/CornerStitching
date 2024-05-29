@@ -217,3 +217,85 @@ TEST(Stitch, AreaEnum1) {
   EXPECT_EQ((std::vector<Id>{16, 13, 6, 10, 11, 14, 12, 9, 7, 2, 8}),
             s.AreaEnum({s.coord_ + s.size_ / 4, s.size_ / 2}));
 }
+
+std::vector<Id> Neighbors(const Stitch& s, Id t, Side side) {
+  assert(s.Exist(t));
+  // collect id of existing tiles
+  std::vector<Id> ids;
+  for (size_t i = 0; i < s.tiles_.size(); i++)
+    if (s.At(i).has_value()) ids.push_back(i);
+  // collect neighbors linearly
+  std::vector<Id> neighbors;
+  for (auto id : ids) {
+    bool is_neighbor = side == RIGHT  ? s.Ref(id).IsRightNeighborTo(s.Ref(t))
+                       : side == LEFT ? s.Ref(id).IsLeftNeighborTo(s.Ref(t))
+                       : side == TOP  ? s.Ref(id).IsTopNeighborTo(s.Ref(t))
+                                      : s.Ref(id).IsBottomNeighborTo(s.Ref(t));
+    if (is_neighbor) neighbors.push_back(id);
+  }
+  // sort neighbors
+  auto cmp = [&](const Id& l, const Id& r) {
+    return side == RIGHT  ? s.Ref(l).coord.y > s.Ref(r).coord.y
+           : side == LEFT ? s.Ref(l).coord.y < s.Ref(r).coord.y
+           : side == TOP  ? s.Ref(l).coord.x > s.Ref(r).coord.x
+                          : s.Ref(l).coord.x < s.Ref(r).coord.x;
+  };
+  std::sort(neighbors.begin(), neighbors.end(), cmp);
+  return neighbors;
+}
+
+TEST(test_helper, Neighbors) {
+  Example example = Example::Example1();
+  auto& s = example.stitch;
+  // collect id of existing tiles
+  std::vector<Id> ids;
+  for (size_t i = 0; i < s.tiles_.size(); i++)
+    if (s.tiles_[i].has_value()) ids.push_back(i);
+  // test
+  for (auto id : ids) {
+    for (auto side : {RIGHT, LEFT, TOP, BOTTOM}) {
+      const auto& golden = side == RIGHT  ? example.right_neighbors[id]
+                           : side == LEFT ? example.left_neighbors[id]
+                           : side == TOP  ? example.top_neighbors[id]
+                                          : example.bottom_neighbors[id];
+      EXPECT_EQ(golden, Neighbors(s, id, side));
+    }
+  }
+}
+
+TEST(Stitch, VerticalSplit1) {
+  Example example = Example::Example1();
+  auto& s = example.stitch;
+  // collect id of existing tiles
+  std::vector<Id> ids;
+  for (size_t i = 0; i < s.tiles_.size(); i++)
+    if (s.tiles_[i].has_value()) ids.push_back(i);
+  // test
+  for (auto id : ids) {
+    auto n_id = s.VerticalSplit(id, s.Ref(id).coord.x + s.Ref(id).size.x / 2);
+    for (auto side : {RIGHT, LEFT, TOP, BOTTOM}) {
+      switch (side) {
+        case RIGHT:
+          EXPECT_EQ(Neighbors(s, id, side), s.RightNeighborFinding(id)) << id;
+          EXPECT_EQ(Neighbors(s, n_id, side), s.RightNeighborFinding(n_id))
+              << n_id;
+          break;
+        case LEFT:
+          EXPECT_EQ(Neighbors(s, id, side), s.LeftNeighborFinding(id)) << id;
+          EXPECT_EQ(Neighbors(s, n_id, side), s.LeftNeighborFinding(n_id))
+              << n_id;
+          break;
+        case TOP:
+          EXPECT_EQ(Neighbors(s, id, side), s.TopNeighborFinding(id)) << id;
+          EXPECT_EQ(Neighbors(s, n_id, side), s.TopNeighborFinding(n_id))
+              << n_id;
+          break;
+        default:
+          EXPECT_EQ(Neighbors(s, id, side), s.BottomNeighborFinding(id)) << id;
+          EXPECT_EQ(Neighbors(s, n_id, side), s.BottomNeighborFinding(n_id))
+              << n_id;
+          break;
+      }
+    }
+  }
+}
