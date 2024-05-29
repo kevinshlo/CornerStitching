@@ -66,10 +66,12 @@ class Stitch {
   Id AllocTile();
   // free tile `id`, return 0 if success else return 1
   int FreeTile(Id id);
-  // vertically split tile `id` along line x=`x`
+  // vertically split tile `id` along line x=`x`, return the created new tile
   Id VerticalSplit(Id id, Len x);
-  // horizontally split tile `id` along line y=`y`
+  // horizontally split tile `id` along line y=`y`, return the created new tile
   Id HorizontalSplit(Id id, Len y);
-  // Merge tiles `id1` & `id2`
-  Id Merge(Id id1, Id id2);
+  // vertically merge tiles `left` & `right`, return the merged tile
+  Id VerticalMerge(Id left, Id right);
+  // horizontally merge tiles `lower` & `upper`, return the merged tile
+  Id HorizontalMerge(Id lower, Id upper);
 };

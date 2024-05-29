@@ -152,6 +152,15 @@ std::vector<Id> Stitch::AreaEnum(const Tile& area, Id start) const {
   return enums;
 }
 
+Id Stitch::LastInserted() const {
+  if (Exist(last_inserted_))
+    return last_inserted_;
+  else if (NumTiles() > 0)
+    for (int i = tiles_.size() - 1; i >= 0; i--)
+      if (tiles_[i].has_value()) return i;
+  return kNullId;
+}
+
 void Stitch::AreaEnumHelper(const Tile& area, std::vector<Id>& enums,
                             Id id) const {
   // 1. Enumerate the tile
@@ -291,11 +300,53 @@ Id Stitch::HorizontalSplit(Id lower, Len y) {
   return upper;
 }
 
-Id Stitch::LastInserted() const {
-  if (Exist(last_inserted_))
-    return last_inserted_;
-  else if (NumTiles() > 0)
-    for (int i = tiles_.size() - 1; i >= 0; i--)
-      if (tiles_[i].has_value()) return i;
-  return kNullId;
+Id Stitch::VerticalMerge(Id left, Id right) {
+  if (Ref(left).coord.y != Ref(right).coord.y ||
+      Ref(left).size.y != Ref(right).size.y)  // must align
+    return kNullId;
+  if (Ref(left).coord.x > Ref(right).coord.x) std::swap(left, right);
+  // update stitches touching new (right)
+  // 1. for right, if bl = new, change to orig
+  for (auto id : RightNeighborFinding(right))
+    if (Ref(id).bl == right) Ref(id).bl = left;
+  // 2. for lower, if rt = new, change to orig
+  for (auto id : BottomNeighborFinding(right))
+    if (Ref(id).rt == right) Ref(id).rt = left;
+  // 3. for top, if lb = new, change to orig
+  for (auto id : TopNeighborFinding(right))
+    if (Ref(id).lb == right) Ref(id).lb = left;
+  // adjust the stitch of original tile
+  Ref(left).tr = Ref(right).tr;
+  Ref(left).rt = Ref(right).rt;
+  // update coord & size of original tile
+  Ref(left).size.x = Ref(right).coord.x + Ref(right).size.x - Ref(left).coord.x;
+  // free the new tile
+  FreeTile(right);
+  return left;
+}
+
+Id Stitch::HorizontalMerge(Id lower, Id upper) {
+  if (Ref(lower).coord.x != Ref(upper).coord.x ||
+      Ref(lower).size.x != Ref(upper).size.x)  // must align
+    return kNullId;
+  if (Ref(lower).coord.y > Ref(upper).coord.y) std::swap(lower, upper);
+  // update stitches touching new (upper)
+  // 1. for upper, if lb = new, change to orig
+  for (auto id : TopNeighborFinding(upper))
+    if (Ref(id).lb == upper) Ref(id).lb = lower;
+  // 2. for left, if tr = new, change to orig
+  for (auto id : LeftNeighborFinding(upper))
+    if (Ref(id).tr == upper) Ref(id).tr = lower;
+  // 3. for right, if bl = new, change to orig
+  for (auto id : RightNeighborFinding(upper))
+    if (Ref(id).bl == upper) Ref(id).bl = lower;
+  // adjust the stitch of original tile
+  Ref(lower).tr = Ref(upper).tr;
+  Ref(lower).rt = Ref(upper).rt;
+  // update coord & size of original tile
+  Ref(lower).size.y =
+      Ref(upper).coord.y + Ref(upper).size.y - Ref(lower).coord.y;
+  // free the new tile
+  FreeTile(upper);
+  return lower;
 }
