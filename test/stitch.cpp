@@ -363,7 +363,7 @@ TEST(Stitch, HorizontalSplitMerge1) {
 
 TEST(Stitch, Insert1) {
   Example example = Example::Example1();
-  auto s = example.stitch;  // copied
+  auto& s = example.stitch;
   // collect id of existing tiles
   std::vector<Id> ids;
   for (size_t i = 0; i < s.tiles_.size(); i++)
@@ -378,8 +378,11 @@ TEST(Stitch, Insert1) {
     CheckNeighbors(s);
     CheckStrip(s);
   }
-  // custom
-  s = example.stitch;  // copied
+}
+
+TEST(Stitch, InsertCustom) {
+  Example example = Example::Example1();
+  auto& s = example.stitch;
   std::vector<std::pair<bool, Tile>> cases = {
       {true, {{0, 0}, {1, 24}}},
       {false, {{27, 1}, {2, 4}}},
