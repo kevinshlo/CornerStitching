@@ -173,11 +173,11 @@ Id Stitch::Insert(Tile tile) {
   Id last_id = kNullId, left, right;
   for (Id id = top; Exist(id) && tile.Overlap(Ref(id));) {
     // split left
-    left = HorizontalSplit(id, tile.LowerLeftCorner().x);
+    left = VerticalSplit(id, tile.LowerLeftCorner().x);
     if (left != kNullId) std::swap(left, id);
     HorizontalMerge(left, Ref(left).rt);
     // split right
-    right = HorizontalSplit(id, tile.LowerRightCorner().x);
+    right = VerticalSplit(id, tile.LowerRightCorner().x);
     HorizontalMerge(right, Ref(right).rt);
     // merge middle
     HorizontalMerge(id, last_id);
