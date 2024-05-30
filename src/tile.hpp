@@ -46,6 +46,8 @@ struct Tile {
   Tile(const Pt& coord, const Pt& size, Id bl, Id lb, Id tr, Id rt,
        bool is_space = true);
   friend std::ostream& operator<<(std::ostream&, const Tile&);
+  bool operator==(const Tile& t) const;
+  bool operator!=(const Tile& t) const { return !operator==(t); }
 
   Pt LowerLeftCorner() const { return coord; }
   Pt LowerRightCorner() const { return coord + Pt(size.x, 0); }

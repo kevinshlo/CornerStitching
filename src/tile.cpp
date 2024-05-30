@@ -30,3 +30,9 @@ std::ostream& operator<<(std::ostream& o, const Tile& t) {
     << (t.is_space ? ",s" : "");
   return o;
 }
+
+bool Tile::operator==(const Tile& t) const {
+  return (coord == t.coord && size == t.size) &&
+         (bl == t.bl && lb == t.lb && tr == t.tr && rt == t.rt) &&
+         (is_space == t.is_space);
+}
