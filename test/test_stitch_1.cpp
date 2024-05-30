@@ -129,3 +129,8 @@ TEST(Insert, Stitch1) {
       {false, {{7, 15}, {6, 6}}},
   });
 }
+
+TEST(Delete, Stitch1) {
+  auto e = Stitch1();
+  e.TestDelete();
+}

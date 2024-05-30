@@ -179,7 +179,6 @@ Stitch TestStitch::TestVerticalSplitMerge() const {
   // split
   std::vector<Id> nids;
   for (auto id : ids) {
-    std::cout << "vertical split: " << id << std::endl;
     size_t size = ns.NumTiles();
     const auto& t = ns.Ref(id);
     auto nid = ns.VerticalSplit(id, t.coord.x + t.size.x / 2);
@@ -194,7 +193,6 @@ Stitch TestStitch::TestVerticalSplitMerge() const {
   for (size_t i = 0; i < ids.size(); i++) {
     size_t size = ns.NumTiles();
     Id id = ids[i], nid = nids[i];
-    std::cout << "vertical merge: " << id << " " << nid << std::endl;
     auto mrg = ns.VerticalMerge(id, nid);
     EXPECT_EQ(id, mrg);
     EXPECT_EQ(size, ns.NumTiles() + 1);
@@ -288,5 +286,6 @@ Stitch TestStitch::TestDelete() const {
     CheckTiles(ns);
     CheckStrip(ns);
   }
+  EXPECT_EQ(0, ns.NumTiles());
   return ns;
 }
