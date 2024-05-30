@@ -263,14 +263,54 @@ TEST(test_helper, Neighbors) {
   }
 }
 
+// check no overlap between tiles & whole plane is covered
+void CheckTiles(const Stitch& s) {
+  std::vector<Id> ids;
+  for (size_t i = 0; i < s.tiles_.size(); i++)
+    if (s.tiles_[i].has_value()) ids.push_back(i);
+  Len area = 0;
+  for (auto x : ids) {
+    area += s.Ref(x).size.x * s.Ref(x).size.y;
+    for (auto y : ids) EXPECT_EQ(x == y, s.Ref(x).Overlap(s.Ref(y)));
+  }
+  EXPECT_FLOAT_EQ(s.size_.x * s.size_.y, area);
+}
+
+// check maximum horizontal strip
+void CheckStrip(const Stitch& s) {
+  for (size_t id = 0; id < s.tiles_.size(); id++) {
+    if (!s.tiles_[id].has_value()) continue;
+    const auto& tl = s.Ref(id);
+    if (tl.is_space) {
+      if (s.Exist(tl.bl)) {
+        EXPECT_FALSE(s.Ref(tl.bl).is_space) << id;
+      }
+      if (s.Exist(tl.tr)) {
+        EXPECT_FALSE(s.Ref(tl.tr).is_space) << id;
+      }
+    }
+  }
+}
+
+// Check the neighbors & pointers of all tiles
 void CheckNeighbors(const Stitch& s) {
   for (size_t id = 0; id < s.tiles_.size(); id++) {
     if (!s.tiles_[id].has_value()) continue;
-    EXPECT_EQ(Neighbors(s, id, RIGHT), s.RightNeighborFinding(id)) << id;
-    EXPECT_EQ(Neighbors(s, id, LEFT), s.LeftNeighborFinding(id)) << id;
-    EXPECT_EQ(Neighbors(s, id, TOP), s.TopNeighborFinding(id)) << id;
-    EXPECT_EQ(Neighbors(s, id, BOTTOM), s.BottomNeighborFinding(id)) << id;
+    const auto& t = s.Ref(id);
+    auto rights = Neighbors(s, id, RIGHT);
+    EXPECT_EQ(rights, s.RightNeighborFinding(id)) << id;
+    EXPECT_EQ(rights.size() ? rights.front() : kNullId, t.tr);
+    auto lefts = Neighbors(s, id, LEFT);
+    EXPECT_EQ(lefts, s.LeftNeighborFinding(id)) << id;
+    EXPECT_EQ(lefts.size() ? lefts.front() : kNullId, t.bl);
+    auto tops = Neighbors(s, id, TOP);
+    EXPECT_EQ(tops, s.TopNeighborFinding(id)) << id;
+    EXPECT_EQ(tops.size() ? tops.front() : kNullId, t.rt);
+    auto bottoms = Neighbors(s, id, BOTTOM);
+    EXPECT_EQ(bottoms, s.BottomNeighborFinding(id)) << id;
+    EXPECT_EQ(bottoms.size() ? bottoms.front() : kNullId, t.lb);
   }
+  CheckTiles(s);
 }
 
 TEST(Stitch, VerticalSplitMerge1) {
@@ -323,7 +363,7 @@ TEST(Stitch, HorizontalSplitMerge1) {
 
 TEST(Stitch, Insert1) {
   Example example = Example::Example1();
-  auto& s = example.stitch;
+  auto s = example.stitch;  // copied
   // collect id of existing tiles
   std::vector<Id> ids;
   for (size_t i = 0; i < s.tiles_.size(); i++)
@@ -336,5 +376,23 @@ TEST(Stitch, Insert1) {
       EXPECT_EQ(kNullId, s.Insert(s.Ref(id))) << id;
     }
     CheckNeighbors(s);
+    CheckStrip(s);
+  }
+  // custom
+  s = example.stitch;  // copied
+  std::vector<std::pair<bool, Tile>> cases = {
+      {true, {{0, 0}, {1, 24}}},
+      {false, {{27, 1}, {2, 4}}},
+      {true, {{13, 15}, {6, 7}}},
+      {false, {{7, 15}, {6, 6}}},
+  };
+  for (const auto& [success, t] : cases) {
+    if (success) {
+      EXPECT_NE(kNullId, s.Insert(t)) << t;
+    } else {
+      EXPECT_EQ(kNullId, s.Insert(t)) << t;
+    }
+    CheckNeighbors(s);
+    CheckStrip(s);
   }
 }

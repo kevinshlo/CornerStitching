@@ -1,5 +1,10 @@
 #include "tile.hpp"
 
+std::ostream& operator<<(std::ostream& o, const Pt& p) {
+  o << "(" << p.x << "," << p.y << ")";
+  return o;
+}
+
 Tile::Tile(const Pt& coord, const Pt& size, bool is_space)
     : coord(coord), size(size), is_space(is_space) {
   assert(coord.InQuadrantI() && "coord must lies in Quadrant I");
@@ -17,4 +22,11 @@ Tile::Tile(const Pt& coord, const Pt& size, Id bl, Id lb, Id tr, Id rt,
       is_space(is_space) {
   assert(coord.InQuadrantI() && "coord must lies in Quadrant I");
   assert(size.IsSize(coord) && "illegal size");
+}
+
+std::ostream& operator<<(std::ostream& o, const Tile& t) {
+  o << t.coord << "," << t.size                                              //
+    << ",bl:" << t.bl << ",lb:" << t.lb << ",tr:" << t.tr << ",rt:" << t.rt  //
+    << (t.is_space ? ",s" : "");
+  return o;
 }
