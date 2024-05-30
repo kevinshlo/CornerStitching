@@ -46,4 +46,6 @@ struct TestStitch {
   Stitch TestHorizontalSplitMerge() const;
   // insert each space tile with its own area
   Stitch TestInsert() const;
+  // each case: {insertion is success or not, desired tile}
+  Stitch TestInsert(const std::vector<std::tuple<bool, Tile>>& cases) const;
 };

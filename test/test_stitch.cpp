@@ -176,9 +176,11 @@ Stitch TestStitch::TestVerticalSplitMerge() const {
   // split
   std::vector<Id> nids;
   for (auto id : ids) {
+    size_t size = ns.NumTiles();
     const auto& t = ns.Ref(id);
     auto nid = ns.VerticalSplit(id, t.coord.x + t.size.x / 2);
     EXPECT_NE(nid, id) << "should return id of new tile";
+    EXPECT_EQ(size + 1, ns.NumTiles());
     CheckNeighbors();
     CheckTiles();
     nids.push_back(nid);
@@ -186,9 +188,11 @@ Stitch TestStitch::TestVerticalSplitMerge() const {
   EXPECT_FALSE(StitchEqual(ns, s));
   // merge
   for (size_t i = 0; i < ids.size(); i++) {
+    size_t size = ns.NumTiles();
     Id id = ids[i], nid = nids[i];
     auto mrg = ns.VerticalMerge(id, nid);
     EXPECT_EQ(id, mrg);
+    EXPECT_EQ(size, ns.NumTiles() + 1);
     CheckNeighbors();
     CheckTiles();
   }
@@ -203,9 +207,11 @@ Stitch TestStitch::TestHorizontalSplitMerge() const {
   // split
   std::vector<Id> nids;
   for (auto id : ids) {
+    size_t size = ns.NumTiles();
     const auto& t = ns.Ref(id);
     auto nid = ns.HorizontalSplit(id, t.coord.y + t.size.y / 2);
     EXPECT_NE(nid, id) << "should return id of new tile";
+    EXPECT_EQ(size + 1, ns.NumTiles());
     CheckNeighbors();
     CheckTiles();
     nids.push_back(nid);
@@ -213,9 +219,11 @@ Stitch TestStitch::TestHorizontalSplitMerge() const {
   EXPECT_FALSE(StitchEqual(ns, s));
   // merge
   for (size_t i = 0; i < ids.size(); i++) {
+    size_t size = ns.NumTiles();
     Id id = ids[i], nid = nids[i];
     auto mrg = ns.HorizontalMerge(id, nid);
     EXPECT_EQ(id, mrg);
+    EXPECT_EQ(size, ns.NumTiles() + 1);
     CheckNeighbors();
     CheckTiles();
   }
@@ -227,15 +235,36 @@ Stitch TestStitch::TestHorizontalSplitMerge() const {
 Stitch TestStitch::TestInsert() const {
   auto ns = s;
   for (auto id : Tiles()) {
+    size_t size = ns.NumTiles();
     if (ns.Ref(id).is_space) {
       EXPECT_NE(kNullId, ns.Insert(ns.Ref(id))) << id;
     } else {
       EXPECT_EQ(kNullId, ns.Insert(ns.Ref(id))) << id;
     }
+    EXPECT_EQ(size, ns.NumTiles());
     CheckNeighbors();
     CheckTiles();
     CheckStrip();
     EXPECT_FALSE(StitchEqual(ns, s));
+  }
+  return ns;
+}
+
+Stitch TestStitch::TestInsert(
+    const std::vector<std::tuple<bool, Tile>>& cases) const {
+  auto ns = s;
+  for (const auto& [success, t] : cases) {
+    Id nid = ns.Insert(t);
+    if (success) {
+      EXPECT_NE(kNullId, nid) << t;
+      EXPECT_EQ(ns.Ref(nid).coord, t.coord);
+      EXPECT_EQ(ns.Ref(nid).size, t.size);
+    } else {
+      EXPECT_EQ(kNullId, nid) << t;
+    }
+    CheckNeighbors();
+    CheckTiles();
+    CheckStrip();
   }
   return ns;
 }
