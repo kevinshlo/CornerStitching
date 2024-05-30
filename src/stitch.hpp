@@ -36,8 +36,8 @@ class Stitch {
   // each tile is visited after all its upper & left tiles are visited
   std::vector<Id> AreaEnum(const Tile& area, Id start = kNullId) const;
 
-  Id InsertTile(Tile tile);
-  Id DeleteTile(Tile tile);
+  Id Insert(Tile tile);
+  int Delete(Id id);
 
 #ifdef GTEST
  public:
