@@ -170,7 +170,7 @@ Id Stitch::Insert(Tile tile) {
   Id new_bottom = HorizontalSplit(bottom, tile.LowerLeftCorner().y);
   if (new_bottom != kNullId) bottom = new_bottom;
   // 4. wall down along left side as AreaSearch
-  Id last_id = kNullId, left, right;
+  Id last_id = kNullId, left = kNullId, right = kNullId;
   for (Id id = top; Exist(id) && tile.Overlap(Ref(id));) {
     // split left
     left = VerticalSplit(id, tile.LowerLeftCorner().x);
