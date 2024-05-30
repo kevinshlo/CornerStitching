@@ -1,6 +1,7 @@
 #include "stitch.hpp"
 
 #include <cassert>
+#include <iostream>
 
 Stitch::Stitch(const Pt& coord, const Pt& size) : coord_(coord), size_(size) {
   assert(coord_.InQuadrantI() && "coord must lies in Quadrant I");
@@ -152,6 +153,47 @@ std::vector<Id> Stitch::AreaEnum(const Tile& area, Id start) const {
   return enums;
 }
 
+Id Stitch::Insert(Tile tile) {
+  assert(Tile(coord_, size_).Contain(tile) &&
+         "inserted tile must inside the whole plane");
+  // if there's solid tiles in the inserted tile, abort
+  if (AreaSearch(tile) != kNullId) return kNullId;
+  // 1. Find the space tile containing the top edge of the new tile
+  Id top = PointFinding(tile.UpperLeftCorner());
+  if (!tile.Overlap(Ref(top)))  // look for bottom neighbors
+    for (top = Ref(top).lb; Exist(top); top = Ref(top).tr)
+      if (tile.Overlap(Ref(top))) break;
+  // 2. split the top tile
+  HorizontalSplit(top, tile.UpperLeftCorner().y);
+  // 3. Find & split the space tile containing the bottom edge of the new tile
+  Id bottom = PointFinding(tile.LowerLeftCorner(), top);
+  Id new_bottom = HorizontalSplit(bottom, tile.LowerLeftCorner().y);
+  if (new_bottom != kNullId) bottom = new_bottom;
+  // 4. wall down along left side as AreaSearch
+  Id last_id = kNullId, left = kNullId, right = kNullId;
+  for (Id id = top; Exist(id) && tile.Overlap(Ref(id));) {
+    // split left
+    left = VerticalSplit(id, tile.LowerLeftCorner().x);
+    if (left != kNullId) std::swap(left, id);
+    HorizontalMerge(left, Ref(left).rt);
+    // split right
+    right = VerticalSplit(id, tile.LowerRightCorner().x);
+    HorizontalMerge(right, Ref(right).rt);
+    // merge middle
+    HorizontalMerge(id, last_id);
+    last_id = id;
+    // move down
+    for (id = Ref(id).lb; Exist(id); id = Ref(id).tr) {
+      if (tile.Overlap(Ref(id))) break;
+      if (tile.CmpX(Ref(id).coord.x) == Tile::GT) id = kNullId;
+    }
+  }
+  HorizontalMerge(Ref(left).lb, left);
+  HorizontalMerge(Ref(right).lb, right);
+  Ref(last_id).is_space = false;
+  return last_id;
+}
+
 Id Stitch::LastInserted() const {
   if (Exist(last_inserted_))
     return last_inserted_;
@@ -301,6 +343,9 @@ Id Stitch::HorizontalSplit(Id lower, Len y) {
 }
 
 Id Stitch::VerticalMerge(Id left, Id right) {
+  if (!Exist(left) || !Exist(right)) return kNullId;
+  if (Ref(left).is_space != Ref(right).is_space)
+    return kNullId;  // must be same type
   if (Ref(left).coord.y != Ref(right).coord.y ||
       Ref(left).size.y != Ref(right).size.y)  // must align
     return kNullId;
@@ -326,6 +371,9 @@ Id Stitch::VerticalMerge(Id left, Id right) {
 }
 
 Id Stitch::HorizontalMerge(Id lower, Id upper) {
+  if (!Exist(lower) || !Exist(upper)) return kNullId;
+  if (Ref(lower).is_space != Ref(upper).is_space)
+    return kNullId;  // must be same type
   if (Ref(lower).coord.x != Ref(upper).coord.x ||
       Ref(lower).size.x != Ref(upper).size.x)  // must align
     return kNullId;
