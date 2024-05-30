@@ -320,3 +320,21 @@ TEST(Stitch, HorizontalSplitMerge1) {
     CheckNeighbors(s);
   }
 }
+
+TEST(Stitch, Insert1) {
+  Example example = Example::Example1();
+  auto& s = example.stitch;
+  // collect id of existing tiles
+  std::vector<Id> ids;
+  for (size_t i = 0; i < s.tiles_.size(); i++)
+    if (s.tiles_[i].has_value()) ids.push_back(i);
+  // insert each tile
+  for (auto id : ids) {
+    if (s.Ref(id).is_space) {
+      EXPECT_NE(kNullId, s.Insert(s.Ref(id))) << id;
+    } else {
+      EXPECT_EQ(kNullId, s.Insert(s.Ref(id))) << id;
+    }
+    CheckNeighbors(s);
+  }
+}
