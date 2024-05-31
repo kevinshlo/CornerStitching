@@ -14,3 +14,5 @@ jobs:
         run: make
       - name: gtest
         run: make gtest
+      - name: pytest
+        run: make pytest
