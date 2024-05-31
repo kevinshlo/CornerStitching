@@ -4,6 +4,7 @@ TEST_DIR := test
 SRC = $(wildcard $(SRC_DIR)/*.cpp)
 INC = $(wildcard $(SRC_DIR)/*.hpp)
 TEST = $(wildcard $(TEST_DIR)/*.cpp)
+TEST_INC = $(wildcard $(TEST_DIR)/*.hpp)
 
 CXX := g++
 CXX_FLAGS := -std=c++17 -Wall -fPIC
@@ -25,7 +26,7 @@ $(NAME).pyi: $(NAME).so
 pytest: $(NAME)_test.py $(NAME)_pytest.so $(NAME)_pytest.pyi
 	python3 -m pytest -v -s
 
-$(NAME)_pytest.so: $(SRC) $(INC) $(TEST)
+$(NAME)_pytest.so: $(SRC) $(INC) $(TEST) $(TEST_INC)
 	$(CXX) $(SRC) $(TEST) -o $@ $(CXX_FLAGS) $(GTEST_FLAGS) $(PY_FLAGS)
 
 $(NAME)_pytest.pyi: $(NAME)_pytest.so
@@ -34,7 +35,7 @@ $(NAME)_pytest.pyi: $(NAME)_pytest.so
 gtest: $(NAME)
 	./$(NAME)
 
-$(NAME): $(SRC) $(INC) $(TEST)
+$(NAME): $(SRC) $(INC) $(TEST) $(TEST_INC)
 	$(CXX) $(SRC) $(TEST) -o $@ $(CXX_FLAGS) $(GTEST_FLAGS)
 
 .PHONY: clean

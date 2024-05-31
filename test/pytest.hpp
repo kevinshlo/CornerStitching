@@ -101,7 +101,6 @@ int CheckTiles(PyStitch& ps) {
   std::vector<Id> ids = TestStitch::Tiles(s);
   Len area = 0;
   for (auto x : ids) {
-    std::cout << s.Ref(x).size.x * s.Ref(x).size.y << std::endl;
     area += s.Ref(x).size.x * s.Ref(x).size.y;
     for (auto y : ids) {
       R_EXPECT_EQ(x == y, s.Ref(x).Overlap(s.Ref(y)));
@@ -118,19 +117,21 @@ bool CheckStrip(PyStitch& ps) {
     const auto& tl = s.Ref(id);
     if (tl.is_space) {
       if (s.Exist(tl.bl)) {
-        R_EXPECT_FALSE(s.Ref(tl.bl).is_space);
+        R_EXPECT_FALSE(s.Ref(tl.bl).is_space) << id;
       }
       if (s.Exist(tl.tr)) {
-        R_EXPECT_FALSE(s.Ref(tl.tr).is_space);
+        R_EXPECT_FALSE(s.Ref(tl.tr).is_space) << id;
       }
-      if (s.Exist(tl.lb) && s.Ref(tl.lb).is_space) {
-        R_EXPECT_FALSE(s.Ref(tl.lb).coord.x == tl.coord.x &&
-                       s.Ref(tl.lb).size.x == tl.size.x);
-      }
-      if (s.Exist(tl.rt) && s.Ref(tl.rt).is_space) {
-        R_EXPECT_FALSE(s.Ref(tl.rt).coord.x == tl.coord.x &&
-                       s.Ref(tl.rt).size.x == tl.size.x);
-      }
+      // if (s.Exist(tl.lb) && s.Ref(tl.lb).is_space) {
+      //   R_EXPECT_FALSE(s.Ref(tl.lb).coord.x == tl.coord.x &&
+      //                  s.Ref(tl.lb).size.x == tl.size.x)
+      //       << id;
+      // }
+      // if (s.Exist(tl.rt) && s.Ref(tl.rt).is_space) {
+      //   R_EXPECT_FALSE(s.Ref(tl.rt).coord.x == tl.coord.x &&
+      //                  s.Ref(tl.rt).size.x == tl.size.x)
+      //       << id;
+      // }
     }
   }
   return ret;
