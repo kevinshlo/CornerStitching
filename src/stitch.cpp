@@ -43,7 +43,7 @@ Id Stitch::PointFinding(const Pt& p, Id start) const {
 }
 
 std::vector<Id> Stitch::RightNeighborFinding(Id id) const {
-  assert(Exist(id) && "target tile must exist");
+  if (!Exist(id)) return {};
   const auto& tl = Ref(id);
   std::vector<Id> neighbors;
   for (Id i = tl.tr;  // 1. go to tr
@@ -59,7 +59,7 @@ std::vector<Id> Stitch::RightNeighborFinding(Id id) const {
 }
 
 std::vector<Id> Stitch::LeftNeighborFinding(Id id) const {
-  assert(Exist(id) && "target tile must exist");
+  if (!Exist(id)) return {};
   const auto& tl = Ref(id);
   std::vector<Id> neighbors;
   for (Id i = tl.bl;  // 1. go to bl
@@ -75,7 +75,7 @@ std::vector<Id> Stitch::LeftNeighborFinding(Id id) const {
 }
 
 std::vector<Id> Stitch::TopNeighborFinding(Id id) const {
-  assert(Exist(id) && "target tile must exist");
+  if (!Exist(id)) return {};
   const auto& tl = Ref(id);
   std::vector<Id> neighbors;
   for (Id i = tl.rt;  // 1. go to rt
@@ -91,7 +91,7 @@ std::vector<Id> Stitch::TopNeighborFinding(Id id) const {
 }
 
 std::vector<Id> Stitch::BottomNeighborFinding(Id id) const {
-  assert(Exist(id) && "target tile must exist");
+  if (!Exist(id)) return {};
   const auto& tl = Ref(id);
   std::vector<Id> neighbors;
   for (Id i = tl.lb;  // 1. go to lb
@@ -107,8 +107,9 @@ std::vector<Id> Stitch::BottomNeighborFinding(Id id) const {
 }
 
 Id Stitch::AreaSearch(const Tile& area, Id start) const {
-  assert(Tile(coord_, size_).Contain(area) &&
-         "search area must inside the whole plane");
+  if (!area.coord.InQuadrantI() || !area.size.IsSize() ||
+      !Tile(coord_, size_).Contain(area))
+    return kNullId;
   // Point-finding the tile containing upper-left corner of the area
   Id id = PointFinding(area.UpperLeftCorner(), start);
   if (!area.Overlap(Ref(id))) {  // look for bottom neighbors
@@ -132,8 +133,9 @@ Id Stitch::AreaSearch(const Tile& area, Id start) const {
 }
 
 std::vector<Id> Stitch::AreaEnum(const Tile& area, Id start) const {
-  assert(Tile(coord_, size_).Contain(area) &&
-         "search area must inside the whole plane");
+  if (!area.coord.InQuadrantI() || !area.size.IsSize() ||
+      !Tile(coord_, size_).Contain(area))
+    return {};
   std::vector<Id> enums;
   // Point-finding the tile containing upper-left corner of the area
   Id id = PointFinding(area.UpperLeftCorner(), start);
@@ -155,8 +157,7 @@ std::vector<Id> Stitch::AreaEnum(const Tile& area, Id start) const {
 }
 
 Id Stitch::Insert(Tile tile) {
-  assert(Tile(coord_, size_).Contain(tile) &&
-         "inserted tile must inside the whole plane");
+  if (!Tile(coord_, size_).Contain(tile)) return kNullId;
   // if there's solid tiles in the inserted tile, abort
   if (AreaSearch(tile) != kNullId) return kNullId;
   // 1. Find the space tile containing the top edge of the new tile
