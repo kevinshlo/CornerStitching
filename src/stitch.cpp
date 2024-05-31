@@ -8,6 +8,9 @@ Stitch::Stitch(const Pt& coord, const Pt& size) : coord_(coord), size_(size) {
   assert(coord_.InQuadrantI() && "coord must lies in Quadrant I");
   assert(size_.IsSize() && "illegal size");
   assert(size_.x > 0 && size_.y > 0 && "plane without area is no supported");
+  Id id = AllocTile();
+  Ref(id).coord = coord;
+  Ref(id).size = size;
 }
 
 Id Stitch::PointFinding(const Pt& p, Id start) const {

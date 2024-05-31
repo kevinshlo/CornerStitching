@@ -52,9 +52,9 @@ class Stitch {
   /* default: cover QuadrantI*/
   Pt coord_{0, 0};             // lower-left corner
   Pt size_{kLenMax, kLenMax};  // (width, height)
-  std::vector<std::optional<Tile>> tiles_{Tile(Pt(0, 0), Pt(kLenMax, kLenMax))};
-  std::stack<size_t> slots_{};  // index in tiles_ which are already deleted
-  Id last_inserted_{kNullId};   // record last tile for better locality
+  std::vector<std::optional<Tile>> tiles_;
+  std::stack<size_t> slots_;   // index in tiles_ which are already deleted
+  Id last_inserted_{kNullId};  // record last tile for better locality
 
   // get reference of tile `id` (without check)
   const Tile& Ref(Id id) const { return tiles_[id].value(); }
