@@ -14,10 +14,13 @@ PY_FLAGS := \
 	`python3 -m pybind11 --includes`
 
 
-all: $(NAME).so
+all: $(NAME).so $(NAME).pyi
 
 $(NAME).so: $(SRC) $(INC)
 	$(CXX) $(SRC) -o $(NAME).so $(CXX_FLAGS) $(PY_FLAGS)
+
+$(NAME).pyi: $(NAME).so
+	stubgen -m $(NAME) --include-docstrings -o ./
 
 gtest: $(NAME)
 	./$(NAME)
@@ -27,4 +30,4 @@ $(NAME): $(SRC) $(INC) $(TEST)
 
 .PHONY: clean
 clean:
-	rm -rf $(NAME) $(NAME)*.so build __pycache__ .pytest_cache
+	rm -rf $(NAME) $(NAME).so $(NAME).pyi
