@@ -89,6 +89,16 @@ void TestStitch::CheckStrip(const Stitch& s) const {
       if (s.Exist(tl.tr)) {
         EXPECT_FALSE(s.Ref(tl.tr).is_space) << id;
       }
+      if (s.Exist(tl.lb) && s.Ref(tl.lb).is_space) {
+        EXPECT_FALSE(s.Ref(tl.lb).coord.x == tl.coord.x &&
+                     s.Ref(tl.lb).size.x == tl.size.x)
+            << id;
+      }
+      if (s.Exist(tl.rt) && s.Ref(tl.rt).is_space) {
+        EXPECT_FALSE(s.Ref(tl.rt).coord.x == tl.coord.x &&
+                     s.Ref(tl.rt).size.x == tl.size.x)
+            << id;
+      }
     }
   }
 }
@@ -275,17 +285,17 @@ Stitch TestStitch::TestInsert(
 Stitch TestStitch::TestDelete() const {
   auto ns = s;
   for (auto id : Tiles(ns)) {
-    auto t = ns.At(id).value();
-    auto opt = ns.Delete(id);
-    if (ns.Ref(id).is_space) {
-      EXPECT_EQ(std::nullopt, opt);
+    auto t = ns.At(id);
+    if (s.Ref(id).is_space) {  // check in the original stitch
+      EXPECT_EQ(std::nullopt, ns.Delete(id)) << id;
     } else {
-      EXPECT_EQ(t, opt.value());
+      EXPECT_EQ(t, ns.Delete(id)) << id;
     }
     CheckNeighbors(ns);
     CheckTiles(ns);
     CheckStrip(ns);
   }
-  EXPECT_EQ(0, ns.NumTiles());
+  EXPECT_EQ(1, ns.NumTiles());
+  for (auto id : Tiles(ns)) EXPECT_TRUE(ns.Ref(id).is_space);
   return ns;
 }

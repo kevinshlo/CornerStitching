@@ -274,8 +274,10 @@ std::optional<Tile> Stitch::Delete(Id dead) {
   }
   // merge space tiles if possible
   for (auto d : merge_dead) {
-    HorizontalMerge(d, Ref(d).rt);
-    HorizontalMerge(Ref(d).bl, d);
+    if (Exist(d)) {
+      HorizontalMerge(d, Ref(d).rt);
+      HorizontalMerge(Ref(d).lb, d);
+    }
   }
   return std::optional<Tile>{ret};
 }
