@@ -12,14 +12,18 @@ class Stitch {
   Stitch(const Stitch& stitch) = default;
   Stitch(const Pt& coord, const Pt& size);
 
-  /* number of tiles */
-  size_t NumTiles() const { return tiles_.size() - slots_.size(); }
+  bool Exist(Id id) const {
+    return id != kNullId && 0 <= id && (size_t)id < tiles_.size() &&
+           tiles_[id].has_value();
+  }
   /* get a copy of tile */
   std::optional<Tile> At(Id id) const {
     return (id != kNullId && 0 <= id && (size_t)id < tiles_.size())
                ? tiles_[id]
                : std::nullopt;
   }
+  /* number of tiles */
+  size_t NumTiles() const { return tiles_.size() - slots_.size(); }
   // find the tile at `pt`, default start at `last_inserted_`
   Id PointFinding(const Pt& pt, Id start = kNullId) const;
   // find all neighbors contacting the right edge of tile `id` (top to down)
@@ -56,10 +60,6 @@ class Stitch {
   const Tile& Ref(Id id) const { return tiles_[id].value(); }
   Tile& Ref(Id id) { return tiles_[id].value(); }
 
-  bool Exist(Id id) const {
-    return id != kNullId && 0 <= id && (size_t)id < tiles_.size() &&
-           tiles_[id].has_value();
-  }
   Id LastInserted() const;
   // the recursive R procedure called by AreaEnum
   void AreaEnumHelper(const Tile& area, std::vector<Id>& enums, Id id) const;

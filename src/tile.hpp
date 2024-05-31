@@ -1,6 +1,5 @@
 #pragma once
 
-#include <cassert>
 #include <iostream>
 #include <limits>
 
@@ -12,6 +11,7 @@ struct Pt {
   Pt() = default;
   Pt(const Pt&) = default;
   Pt(Len x, Len y) : x(x), y(y) {}
+  Pt(const std::pair<Len, Len> &p) : x(p.first), y(p.second) {}
   friend std::ostream& operator<<(std::ostream&, const Pt&);
   Pt operator+(const Pt& p) const { return Pt(x + p.x, y + p.y); }
   Pt operator-(const Pt& p) const { return Pt(x - p.x, y - p.y); }
