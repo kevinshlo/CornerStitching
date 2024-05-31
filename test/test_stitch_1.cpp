@@ -122,20 +122,15 @@ TEST(HorizontalSplitMerge, Stitch1) {
 TEST(Insert, Stitch1) {
   auto e = Stitch1();
   e.TestInsert();
-  auto& s = e.s;
-  std::vector<std::pair<bool, Tile>> cases = {
+  e.TestInsert({
       {true, {{0, 0}, {1, 24}}},
       {false, {{27, 1}, {2, 4}}},
       {true, {{13, 15}, {6, 7}}},
       {false, {{7, 15}, {6, 6}}},
-  };
-  for (const auto& [success, t] : cases) {
-    if (success) {
-      EXPECT_NE(kNullId, s.Insert(t)) << t;
-    } else {
-      EXPECT_EQ(kNullId, s.Insert(t)) << t;
-    }
-    e.CheckNeighbors();
-    e.CheckStrip();
-  }
+  });
+}
+
+TEST(Delete, Stitch1) {
+  auto e = Stitch1();
+  e.TestDelete();
 }

@@ -35,9 +35,10 @@ class Stitch {
   // enumerate all tiles in the given area,
   // each tile is visited after all its upper & left tiles are visited
   std::vector<Id> AreaEnum(const Tile& area, Id start = kNullId) const;
-
+  // return the pointer of the inserted tile if success, else return `kNullId`
   Id Insert(Tile tile);
-  int Delete(Id id);
+  // return the deleted tile if success, else return `std::nullopt`
+  std::optional<Tile> Delete(Id id);
 
 #ifdef GTEST
  public:

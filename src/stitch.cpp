@@ -1,5 +1,6 @@
 #include "stitch.hpp"
 
+#include <algorithm>
 #include <cassert>
 #include <iostream>
 
@@ -192,6 +193,93 @@ Id Stitch::Insert(Tile tile) {
   HorizontalMerge(Ref(right).lb, right);
   Ref(last_id).is_space = false;
   return last_id;
+}
+
+std::optional<Tile> Stitch::Delete(Id dead) {
+  if (!Exist(dead) || Ref(dead).is_space) return std::nullopt;
+  auto ret = Ref(dead);
+  // change the type of the dead tile to space.
+  Ref(dead).is_space = true;
+  auto top = Ref(dead).UpperRightCorner().y;
+  auto bottom = Ref(dead).LowerLeftCorner().y;
+  // collect all right & left neighbors
+  auto right_neighbors = RightNeighborFinding(dead);
+  auto left_neighbors = LeftNeighborFinding(dead);
+  // split & merge right neighbors
+  auto cut = top;
+  std::vector<Id> split_dead;  // from top to bottom
+  for (auto r : right_neighbors) {
+    if (top < Ref(r).UpperLeftCorner().y && Ref(r).is_space) {
+      // space neighbor containing top of dead tile should be split
+      // this should only happens when visiting the first neighbor
+      HorizontalSplit(r, cut);
+    }
+    cut = Ref(r).LowerLeftCorner().y;  // move down cut edge
+    if (cut > bottom) {                // dead tile need to be cut
+      auto dead_upper = HorizontalSplit(dead, cut);
+      VerticalMerge(dead_upper, r);  // solid r must filed
+      split_dead.push_back(dead_upper);
+    } else if (cut < bottom) {                 // neighbor need to be cut
+      auto r_upper = HorizontalSplit(r, cut);  // solid r must filed
+      VerticalMerge(dead, r_upper);            // solid r must filed
+      split_dead.push_back(dead);
+    } else {                   // no need to cut
+      VerticalMerge(dead, r);  // solid r must filed
+      split_dead.push_back(dead);
+    }
+  }
+  // split & merge left neighbors
+  std::vector<Id> merge_dead;
+  for (auto l = left_neighbors.front();
+       Exist(l) && Ref(l).IsLeftNeighborTo(ret) && split_dead.size();) {
+    if (Ref(l).is_space) {
+      auto l_rt = Ref(l).rt;
+      auto d = split_dead.back();
+      split_dead.pop_back();
+      if (Ref(l).LowerRightCorner().y > Ref(d).LowerLeftCorner().y) {
+        // cut the lower part of d which does not touch l
+        // this should only happens when visiting the first neighbor
+        auto d_upper = HorizontalSplit(d, Ref(l).LowerRightCorner().y);
+        merge_dead.push_back(d);  // d_lower
+        d = d_upper;
+      }
+      if (Ref(l).UpperRightCorner().y > Ref(d).UpperLeftCorner().y) {
+        // cut the lower part of l which touches d, merge
+        auto l_upper = HorizontalSplit(l, Ref(d).UpperLeftCorner().y);
+        VerticalMerge(l, d);
+        merge_dead.push_back(l);  // l_lower & d
+        l = l_upper;
+      } else if (Ref(l).UpperRightCorner().y < Ref(d).UpperLeftCorner().y) {
+        // cut the lower part of d which touches l, merge
+        auto d_upper = HorizontalSplit(d, Ref(l).UpperRightCorner().y);
+        split_dead.push_back(d_upper);  // handle in next iter
+        VerticalMerge(l, d);
+        merge_dead.push_back(l);  // l & d_lower
+        l = l_rt;
+      } else {  // l & d have same vertical span, merge
+        VerticalMerge(l, d);
+        merge_dead.push_back(l);
+        l = l_rt;
+      }
+    } else {
+      // no need to split d if l is solid
+      while (split_dead.size() &&
+             (Ref(l).UpperRightCorner().y >=
+              Ref(split_dead.back()).UpperLeftCorner().y)) {
+        merge_dead.push_back(split_dead.back());
+        split_dead.pop_back();
+      }
+      l = Ref(l).rt;
+    }
+  }
+  // merge space tiles if possible
+  for (auto d : merge_dead) {
+    if (Exist(d)) {
+      HorizontalMerge(d, Ref(d).rt);
+      HorizontalMerge(Ref(d).lb, d);
+    }
+  }
+  return std::optional<Tile>{ret};
 }
 
 Id Stitch::LastInserted() const {
