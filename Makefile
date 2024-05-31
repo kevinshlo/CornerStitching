@@ -13,7 +13,7 @@ PY_FLAGS := \
 	-DPY -O3 -shared \
 	`python3-config --includes --ldflags` \
 	`python3 -m pybind11 --includes`
-
+DOC := $(shell if $$(stubgen --include-docstrings > /dev/null 2>&1); then echo --include-docstrings; fi)
 
 all: $(NAME).so $(NAME).pyi
 
@@ -21,7 +21,7 @@ $(NAME).so: $(SRC) $(INC)
 	$(CXX) $(SRC) -o $@ $(CXX_FLAGS) $(PY_FLAGS)
 
 $(NAME).pyi: $(NAME).so
-	stubgen -m $(NAME) --include-docstrings -o ./
+	stubgen -m $(NAME) $(DOC) -o ./
 
 pytest: $(NAME)_test.py $(NAME)_pytest.so $(NAME)_pytest.pyi
 	python3 -m pytest -v -s
@@ -30,7 +30,7 @@ $(NAME)_pytest.so: $(SRC) $(INC) $(TEST) $(TEST_INC)
 	$(CXX) $(SRC) $(TEST) -o $@ $(CXX_FLAGS) $(GTEST_FLAGS) $(PY_FLAGS)
 
 $(NAME)_pytest.pyi: $(NAME)_pytest.so
-	stubgen -m $(NAME)_pytest --include-docstrings -o ./
+	stubgen -m $(NAME)_pytest $(DOC) -o ./
 
 gtest: $(NAME)
 	./$(NAME)
