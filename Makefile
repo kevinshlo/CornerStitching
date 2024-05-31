@@ -14,14 +14,16 @@ PY_FLAGS := \
 	`python3 -m pybind11 --includes`
 
 
-all: py
+all: $(NAME).so
 
-py: $(SRC) $(INC)
+$(NAME).so: $(SRC) $(INC)
 	$(CXX) $(SRC) -o $(NAME).so $(CXX_FLAGS) $(PY_FLAGS)
 
-gtest: $(SRC) $(INC) $(TEST)
-	$(CXX) $(SRC) $(TEST) -o $(NAME) $(CXX_FLAGS) $(GTEST_FLAGS)
+gtest: $(NAME)
 	./$(NAME)
+
+$(NAME): $(SRC) $(INC) $(TEST)
+	$(CXX) $(SRC) $(TEST) -o $(NAME) $(CXX_FLAGS) $(GTEST_FLAGS)
 
 .PHONY: clean
 clean:
