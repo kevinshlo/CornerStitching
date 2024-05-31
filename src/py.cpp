@@ -12,6 +12,8 @@
 namespace py = pybind11;
 PYBIND11_MODULE(MODULE_NAME, m) {
   py::class_<Pt>(m, "Pt")
+      .def_readonly("x", &Pt::x)
+      .def_readonly("y", &Pt::y)
       .def(py::init<>())
       .def(py::init<const Pt&>())
       .def(py::init<Len, Len>())
@@ -23,7 +25,8 @@ PYBIND11_MODULE(MODULE_NAME, m) {
           "__mul__", [](Len l, const Pt& p) { return p * l; },
           py::is_operator())
       .def(py::self * Len())
-      .def(py::self == py::self);
+      .def(py::self == py::self)
+      .def(py::self != py::self);
 
   py::class_<PyTile>(m, "Tile")
       .def(py::init<const PyTile&>())
@@ -44,7 +47,6 @@ PYBIND11_MODULE(MODULE_NAME, m) {
   py::class_<PyStitch>(m, "Stitch")
       .def(py::init<const PyStitch&>())
       .def(py::init<const Pt&, const Pt&>())
-      .def(py::init<const Len2&, const Len2&>())
       .def("__len__", &PyStitch::NumTiles)
       .def("pt_find", &PyStitch::PointFinding)
       .def("right_neighbors", &PyStitch::RightNeighborFinding)

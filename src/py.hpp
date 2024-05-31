@@ -2,8 +2,9 @@
 
 #pragma once
 
-#include <pybind11/operators.h>
 #include <pybind11/pybind11.h>
+// <pybind11/pybind11.h> must be first
+#include <pybind11/operators.h>
 #include <pybind11/stl.h>
 
 #include "stitch.hpp"
@@ -108,7 +109,6 @@ class PyStitch {
   PyStitch() = delete;
   PyStitch(const PyStitch& s) : s_(s.s_) {}
   PyStitch(const Pt& coord, const Pt& size) : s_(coord, size) {}
-  PyStitch(const Len2& coord, const Len2& size) : s_(coord, size) {}
 
   size_t NumTiles() const { return s_.NumTiles(); }
 
