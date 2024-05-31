@@ -1,6 +1,5 @@
 #pragma once
 
-#include <cassert>
 #include <iostream>
 #include <limits>
 
@@ -12,13 +11,17 @@ struct Pt {
   Pt() = default;
   Pt(const Pt&) = default;
   Pt(Len x, Len y) : x(x), y(y) {}
+  Pt(const std::pair<Len, Len>& p) : x(p.first), y(p.second) {}
   friend std::ostream& operator<<(std::ostream&, const Pt&);
   Pt operator+(const Pt& p) const { return Pt(x + p.x, y + p.y); }
   Pt operator-(const Pt& p) const { return Pt(x - p.x, y - p.y); }
   Pt operator-() const { return Pt(-x, -y); }
   Pt operator*(Len l) const { return Pt(x * l, y * l); }
   Pt operator/(Len l) const { return Pt(x / l, y / l); }
-  bool operator==(const Pt& p) const { return (x == p.x) && (y == p.y); }
+  bool friend operator==(const Pt& l, const Pt& r) {
+    return (l.x == r.x) && (l.y == r.y);
+  }
+  bool friend operator!=(const Pt& l, const Pt& r) { return !operator==(l, r); }
   // lies in first quadrant
   bool InQuadrantI() const { return (x >= 0) && (y >= 0); }
   // represents legal width & height relative to `coord` (default:(0, 0))

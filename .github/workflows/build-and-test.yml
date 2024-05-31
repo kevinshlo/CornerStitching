@@ -1,5 +1,5 @@
 name: build and test
-on: [push, pull_request]
+on: [push]
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
@@ -9,8 +9,10 @@ jobs:
         run: |
           sudo apt -qy install \
               build-essential make libgtest-dev pybind11-dev \
-              python3 python3-pip python3-pybind11 python3-pytest
+              python3 python3-pip python3-pybind11 python3-pytest mypy
       - name: build
         run: make
       - name: gtest
         run: make gtest
+      - name: pytest
+        run: make pytest

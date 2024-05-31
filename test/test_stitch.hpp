@@ -20,17 +20,17 @@ struct TestStitch {
   TestStitch(Stitch&& s, std::array<NeighborGolden, LAST>&& neighbor_golden);
 
   // get the existing tiles
-  std::vector<Id> Tiles(const Stitch& s) const;
+  static std::vector<Id> Tiles(const Stitch& s);
   // get golden `side` neighbors of tile `id` by visiting all tiles
-  std::vector<Id> GoldenNeighbors(const Stitch& s, Id id, Side side) const;
+  static std::vector<Id> GoldenNeighbors(const Stitch& s, Id id, Side side);
   // get `side` neighbors of tile `id`
-  std::vector<Id> Neighbors(const Stitch& s, Id id, Side side) const;
+  static std::vector<Id> Neighbors(const Stitch& s, Id id, Side side);
   // check neighbors & pointers of all tiles
-  void CheckNeighbors(const Stitch& s) const;
+  static void CheckNeighbors(const Stitch& s);
   // check no overlap between tiles & whole plane is covered
-  void CheckTiles(const Stitch& s) const;
+  static void CheckTiles(const Stitch& s);
   // check maximum horizontal strip property
-  void CheckStrip(const Stitch& s) const;
+  static void CheckStrip(const Stitch& s);
 
   // test on each tile's corners, starting from default & 4 corners of the plane
   void TestPointFinding() const;

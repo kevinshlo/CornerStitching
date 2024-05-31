@@ -1,5 +1,7 @@
 #include "tile.hpp"
 
+#include <cassert>
+
 std::ostream& operator<<(std::ostream& o, const Pt& p) {
   o << "(" << p.x << "," << p.y << ")";
   return o;
