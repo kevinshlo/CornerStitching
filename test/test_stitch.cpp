@@ -12,15 +12,14 @@ TestStitch::TestStitch(Stitch&& s,
   CheckStrip(s);
 }
 
-std::vector<Id> TestStitch::Tiles(const Stitch& stitch) const {
+std::vector<Id> TestStitch::Tiles(const Stitch& stitch) {
   std::vector<Id> ids;
   for (size_t i = 0; i < stitch.tiles_.size(); i++)
     if (stitch.Exist(i)) ids.push_back(i);
   return ids;
 }
 
-std::vector<Id> TestStitch::GoldenNeighbors(const Stitch& s, Id t,
-                                            Side side) const {
+std::vector<Id> TestStitch::GoldenNeighbors(const Stitch& s, Id t, Side side) {
   EXPECT_NE(LAST, side) << "Invalid side\n";
   if (!s.Exist(t)) return {};
   // collect neighbors linearly
@@ -43,7 +42,7 @@ std::vector<Id> TestStitch::GoldenNeighbors(const Stitch& s, Id t,
   return neighbors;
 }
 
-std::vector<Id> TestStitch::Neighbors(const Stitch& s, Id id, Side side) const {
+std::vector<Id> TestStitch::Neighbors(const Stitch& s, Id id, Side side) {
   EXPECT_NE(LAST, side) << "Invalid side\n";
   return side == RIGHT  ? s.RightNeighborFinding(id)
          : side == LEFT ? s.LeftNeighborFinding(id)
@@ -51,7 +50,7 @@ std::vector<Id> TestStitch::Neighbors(const Stitch& s, Id id, Side side) const {
                         : s.BottomNeighborFinding(id);
 }
 
-void TestStitch::CheckNeighbors(const Stitch& s) const {
+void TestStitch::CheckNeighbors(const Stitch& s) {
   for (auto id : Tiles(s)) {
     const auto& t = s.Ref(id);
     auto rights = GoldenNeighbors(s, id, RIGHT);
@@ -69,7 +68,7 @@ void TestStitch::CheckNeighbors(const Stitch& s) const {
   }
 }
 
-void TestStitch::CheckTiles(const Stitch& s) const {
+void TestStitch::CheckTiles(const Stitch& s) {
   std::vector<Id> ids = Tiles(s);
   Len area = 0;
   for (auto x : ids) {
@@ -79,7 +78,7 @@ void TestStitch::CheckTiles(const Stitch& s) const {
   EXPECT_FLOAT_EQ(s.size_.x * s.size_.y, area);
 }
 
-void TestStitch::CheckStrip(const Stitch& s) const {
+void TestStitch::CheckStrip(const Stitch& s) {
   for (auto id : Tiles(s)) {
     const auto& tl = s.Ref(id);
     if (tl.is_space) {

@@ -17,17 +17,27 @@ PY_FLAGS := \
 all: $(NAME).so $(NAME).pyi
 
 $(NAME).so: $(SRC) $(INC)
-	$(CXX) $(SRC) -o $(NAME).so $(CXX_FLAGS) $(PY_FLAGS)
+	$(CXX) $(SRC) -o $@ $(CXX_FLAGS) $(PY_FLAGS)
 
 $(NAME).pyi: $(NAME).so
 	stubgen -m $(NAME) --include-docstrings -o ./
+
+pytest: $(NAME)_test.py $(NAME)_pytest.so $(NAME)_pytest.pyi
+	python3 -m pytest -v -s
+
+$(NAME)_pytest.so: $(SRC) $(INC) $(TEST)
+	$(CXX) $(SRC) $(TEST) -o $@ $(CXX_FLAGS) $(GTEST_FLAGS) $(PY_FLAGS)
+
+$(NAME)_pytest.pyi: $(NAME)_pytest.so
+	stubgen -m $(NAME)_pytest --include-docstrings -o ./
 
 gtest: $(NAME)
 	./$(NAME)
 
 $(NAME): $(SRC) $(INC) $(TEST)
-	$(CXX) $(SRC) $(TEST) -o $(NAME) $(CXX_FLAGS) $(GTEST_FLAGS)
+	$(CXX) $(SRC) $(TEST) -o $@ $(CXX_FLAGS) $(GTEST_FLAGS)
 
 .PHONY: clean
 clean:
-	rm -rf $(NAME) $(NAME).so $(NAME).pyi
+	rm -rf $(NAME) $(NAME).so $(NAME).pyi $(NAME)_pytest.so $(NAME)_pytest.pyi
+	rm -rf __pycache__ .pytest_cache

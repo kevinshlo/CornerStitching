@@ -2,8 +2,15 @@
 
 #include "py.hpp"
 
+#ifdef GTEST
+#include "../test/pytest.hpp"
+#define MODULE_NAME _stitch_pytest
+#else
+#define MODULE_NAME _stitch
+#endif
+
 namespace py = pybind11;
-PYBIND11_MODULE(_stitch, m) {
+PYBIND11_MODULE(MODULE_NAME, m) {
   py::class_<Pt>(m, "Pt")
       .def(py::init<>())
       .def(py::init<const Pt&>())
@@ -48,6 +55,21 @@ PYBIND11_MODULE(_stitch, m) {
       .def("area_enum", &PyStitch::AreaEnum)
       .def("insert", &PyStitch::Insert)
       .def("delete", &PyStitch::Delete);
+
+#ifdef GTEST
+  m.def("pytest_tiles", &Tiles);
+  m.def("pytest_golden_left_neighbors", &GoldenLeftNeighbors);
+  m.def("pytest_golden_bottom_neighbors", &GoldenBottomNeighbors);
+  m.def("pytest_golden_right_neighbors", &GoldenRightNeighbors);
+  m.def("pytest_golden_top_neighbors", &GoldenTopNeighbors);
+  m.def("pytest_left_neighbors", &LeftNeighbors);
+  m.def("pytest_bottom_neighbors", &BottomNeighbors);
+  m.def("pytest_right_neighbors", &RightNeighbors);
+  m.def("pytest_top_neighbors", &TopNeighbors);
+  m.def("pytest_check_neighbors", &CheckNeighbors);
+  m.def("pytest_check_tiles", &CheckTiles);
+  m.def("pytest_check_strip", &CheckStrip);
+#endif
 }
 
 #endif

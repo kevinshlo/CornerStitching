@@ -35,3 +35,5 @@
 .vscode/
 _stitch
 *.pyi
+__pycache__/
+.pytest_cache
